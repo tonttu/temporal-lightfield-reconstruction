@@ -42,9 +42,13 @@
 
 #if (FW_USE_CUDA)
 #include <cuda.h>
-#   pragma warning(push,3)
+#   ifdef _MSC_VER
+#       pragma warning(push,3)
+#           include <vector_functions.h> // float4, etc.
+#       pragma warning(pop)
+#   else
 #       include <vector_functions.h> // float4, etc.
-#   pragma warning(pop)
+#   endif
 #endif
 
 #if (!FW_CUDA)

@@ -39,7 +39,10 @@
 // In addition, you must have NVIDIA Cuda Toolkit 4.0 properly installed.
 //-------------------------------------------------------------------------------------------------
 
+#ifdef _MSC_VER
 #pragma warning(disable:4127)		// conditional expression is constant
+#endif
+
 #include "Reconstruction.hpp"
 #include "gpu/CudaCompiler.hpp"
 #include "ReconstructionCudaKernels.hpp"

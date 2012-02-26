@@ -25,8 +25,10 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef _MSC_VER
 #pragma warning(disable:4127)
 #pragma warning(disable:4996)
+#endif
 
 #include "SampleBuffer.hpp"
 #include "CameraParams.hpp"

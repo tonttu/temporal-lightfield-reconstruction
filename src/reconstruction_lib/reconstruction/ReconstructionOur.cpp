@@ -36,7 +36,10 @@
 //     http://groups.csail.mit.edu/graphics/tlfr
 //-----------------------------------------------------------------------------------------
 
+#ifdef _MSC_VER
 #pragma warning(disable:4127)		// conditional expression is constant
+#endif
+
 #include "Reconstruction.hpp"
 #include "common/EdgeFunction.hpp"
 
