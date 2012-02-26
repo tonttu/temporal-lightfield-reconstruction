@@ -34,6 +34,10 @@
 #include <new>
 #include <string.h>
 
+#if defined(__GNUC__) || defined(FW_CUDA)
+#include <stdint.h>
+#endif
+
 namespace FW
 {
 //------------------------------------------------------------------------
@@ -89,9 +93,9 @@ typedef float               F32;
 typedef double              F64;
 typedef void                (*FuncPtr)(void);
 
-#if FW_CUDA
-typedef unsigned long long  U64;
-typedef signed long long    S64;
+#if defined(__GNUC__) || defined(FW_CUDA)
+typedef uint64_t            U64;
+typedef int64_t             S64;
 #else
 typedef unsigned __int64    U64;
 typedef signed __int64      S64;
@@ -100,6 +104,9 @@ typedef signed __int64      S64;
 #if FW_64
 typedef S64                 SPTR;
 typedef U64                 UPTR;
+#elif __GNUC__
+typedef __attribute((mode (__pointer__))) S32 SPTR;
+typedef __attribute((mode (__pointer__))) U32 UPTR;
 #else
 typedef __w64 S32           SPTR;
 typedef __w64 U32           UPTR;
@@ -143,7 +150,9 @@ bool            hasError        (void);
 const String&   getError        (void);
 
 void            fail            (const char* fmt, ...);
+#ifdef _WIN32
 void            failWin32Error  (const char* funcName);
+#endif
 void            failIfError     (void);
 
 // Re-entrancy. Called internally by Main and Window.

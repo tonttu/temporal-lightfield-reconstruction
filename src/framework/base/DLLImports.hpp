@@ -51,7 +51,7 @@
 #   endif
 #endif
 
-#if (!FW_CUDA)
+#if defined(_MSC_VER) && !defined(FW_CUDA)
 #   define _WIN32_WINNT 0x0501
 #   define WIN32_LEAN_AND_MEAN
 #   define _WINMM_
@@ -85,7 +85,12 @@ void    deinitDLLImports    (void);
 
 #if (!FW_USE_CUDA)
 #   define CUDA_VERSION 2010
+
+#ifdef _MSC_VER
 #   define CUDAAPI __stdcall
+#else
+#   define CUDAAPI
+#endif
 
 typedef enum { CUDA_SUCCESS = 0}        CUresult;
 typedef struct { FW::S32 x, y; }        int2;
@@ -138,7 +143,9 @@ typedef size_t          CUsize_t;
 #   define GL_FUNC_AVAILABLE(NAME) (NAME != NULL)
 #   define GLEW_STATIC
 #   include "3rdparty/glew/include/GL/glew.h"
-#   include "3rdparty/glew/include/GL/wglew.h"
+#   ifdef _WIN32
+#       include "3rdparty/glew/include/GL/wglew.h"
+#   endif
 #   if FW_USE_CUDA
 #   include <cudaGL.h>
 #   endif

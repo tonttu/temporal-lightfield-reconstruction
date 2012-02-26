@@ -30,6 +30,8 @@
 
 using namespace FW;
 
+#ifdef _MSC_VER
+
 //------------------------------------------------------------------------
 
 static bool s_inited = false;
@@ -186,5 +188,30 @@ void FW::deinitDLLImports(void)
 #undef FW_DLL_DECLARE_VOID
 #undef FW_DLL_IMPORT_CUDA
 #undef FW_DLL_IMPORT_CUV2
+
+#else
+
+//------------------------------------------------------------------------
+
+#define FW_DLL_IMPORT_RETV(RET, CALL, NAME, PARAMS, PASS)   bool isAvailable_ ## NAME(void) { return true; }
+#define FW_DLL_IMPORT_VOID(RET, CALL, NAME, PARAMS, PASS)   bool isAvailable_ ## NAME(void) { return true; }
+#define FW_DLL_DECLARE_RETV(RET, CALL, NAME, PARAMS, PASS)  bool isAvailable_ ## NAME(void) { return true; }
+#define FW_DLL_DECLARE_VOID(RET, CALL, NAME, PARAMS, PASS)  bool isAvailable_ ## NAME(void) { return true; }
+#if (FW_USE_CUDA)
+#   define FW_DLL_IMPORT_CUDA(RET, CALL, NAME, PARAMS, PASS)    bool isAvailable_ ## NAME(void) { return true; }
+#   define FW_DLL_IMPORT_CUV2(RET, CALL, NAME, PARAMS, PASS)    bool isAvailable_ ## NAME(void) { return true; }
+#else
+#   define FW_DLL_IMPORT_CUDA(RET, CALL, NAME, PARAMS, PASS)    bool isAvailable_ ## NAME(void) { return false; }
+#   define FW_DLL_IMPORT_CUV2(RET, CALL, NAME, PARAMS, PASS)    bool isAvailable_ ## NAME(void) { return false; }
+#endif
+#include "base/DLLImports.inl"
+#undef FW_DLL_IMPORT_RETV
+#undef FW_DLL_IMPORT_VOID
+#undef FW_DLL_DECLARE_RETV
+#undef FW_DLL_DECLARE_VOID
+#undef FW_DLL_IMPORT_CUDA
+#undef FW_DLL_IMPORT_CUV2
+
+#endif
 
 //------------------------------------------------------------------------

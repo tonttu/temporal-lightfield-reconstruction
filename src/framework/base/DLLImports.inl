@@ -342,6 +342,8 @@ FW_DLL_DECLARE_VOID(void,       APIENTRY,   glGetRenderbufferParameterivEXT,    
 
 #endif
 
+#ifdef _WIN32
+
 //------------------------------------------------------------------------
 // WGL
 //------------------------------------------------------------------------
@@ -370,5 +372,7 @@ FW_DLL_IMPORT_RETV( MMRESULT,   WINAPI,     waveOutReset,                       
 //------------------------------------------------------------------------
 
 FW_DLL_IMPORT_RETV( BOOL,   STDAPICALLTYPE, PathRelativePathToA,                    (LPSTR pszPath, LPCSTR pszFrom, DWORD dwAttrFrom, LPCSTR pszTo, DWORD dwAttrTo), (pszPath, pszFrom, dwAttrFrom, pszTo, dwAttrTo))
+
+#endif // _WIN32
 
 //------------------------------------------------------------------------

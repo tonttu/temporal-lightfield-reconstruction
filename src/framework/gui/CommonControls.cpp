@@ -1007,7 +1007,11 @@ void CommonControls::enterSliderValue(Slider* s)
     if (s->floatTarget)
     {
         float fval;
+#ifdef _MSC_VER
         if (scanf_s("%g", &fval))
+#else
+        if (scanf("%g", &fval) == 1)
+#endif
         {
             dirty = (*s->floatTarget != fval);
             *s->floatTarget = fval;
@@ -1016,13 +1020,21 @@ void CommonControls::enterSliderValue(Slider* s)
         else
         {
             printf("No value entered.\n");
+#ifdef _MSC_VER
             scanf_s("%*s");             // flush line
+#else
+            scanf("%*s");
+#endif
         }
     }
     else
     {
         int ival;
+#ifdef _MSC_VER
         if (scanf_s("%d", &ival))
+#else
+        if (scanf("%d", &ival) == 1)
+#endif
         {
             dirty = (*s->intTarget != ival);
             *s->intTarget = ival;
@@ -1031,7 +1043,11 @@ void CommonControls::enterSliderValue(Slider* s)
         else
         {
             printf("No value entered.\n");
+#ifdef _MSC_VER
             scanf_s("%*s");             // flush line
+#else
+            scanf("%*s");
+#endif
         }
      }
 

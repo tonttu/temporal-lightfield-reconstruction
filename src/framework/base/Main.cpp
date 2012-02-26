@@ -33,8 +33,14 @@
 #include "gpu/CudaModule.hpp"
 #include "gpu/CudaCompiler.hpp"
 
+#ifdef _MSC_VER
 #include <crtdbg.h>
 #include <conio.h>
+#endif
+
+#ifdef __linux__
+#include <pthread.h>
+#endif
 
 using namespace FW;
 
@@ -57,11 +63,18 @@ int main(int argc, char* argv[])
 
     // Force the main thread to run on a single core.
 
+#ifdef __linux__
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(0, &cpuset);
+    pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+#else
     SetThreadAffinityMask(GetCurrentThread(), 1);
+#endif
 
     // Initialize CRTDBG.
 
-#if FW_DEBUG
+#if FW_DEBUG && _MSC_VER
     int flag = 0;
     flag |= _CRTDBG_ALLOC_MEM_DF;       // use allocation guards
 //  flag |= _CRTDBG_CHECK_ALWAYS_DF;    // check whole memory on each alloc
@@ -130,7 +143,7 @@ int main(int argc, char* argv[])
 
     // Dump memory leaks.
 
-#if FW_DEBUG
+#if FW_DEBUG && defined(_MSC_VER)
     if (s_enableLeakCheck && _CrtDumpMemoryLeaks())
     {
         printf("Press any key to continue . . . ");

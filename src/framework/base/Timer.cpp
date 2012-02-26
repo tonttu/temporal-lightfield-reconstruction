@@ -52,11 +52,17 @@ S64 Timer::queryTicks(void)
     if (!Thread::isMain())
         fail("Timers can only be used in the main thread!");
 
+#ifdef _MSC_VER
     LARGE_INTEGER ticks;
     if (!QueryPerformanceCounter(&ticks))
         failWin32Error("QueryPerformanceCounter");
 
     s_prevTicks = max(s_prevTicks, ticks.QuadPart);
+#else
+    timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    s_prevTicks = max(s_prevTicks, ts.tv_sec * S64(1000000000l) + ts.tv_nsec);
+#endif
     return s_prevTicks;
 }
 
@@ -66,10 +72,14 @@ F32 Timer::ticksToSecs(S64 ticks)
 {
     if (s_ticksToSecsCoef == -1.0)
     {
+#ifdef _MSC_VER
         LARGE_INTEGER freq;
         if (!QueryPerformanceFrequency(&freq))
             failWin32Error("QueryPerformanceFrequency");
         s_ticksToSecsCoef = max(1.0 / (F64)freq.QuadPart, 0.0);
+#else
+        s_ticksToSecsCoef = 1.0 / F64(1000000000l);
+#endif
     }
 
     return (F32)(ticks * s_ticksToSecsCoef);

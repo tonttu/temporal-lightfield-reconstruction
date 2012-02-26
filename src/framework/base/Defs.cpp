@@ -150,7 +150,11 @@ void* FW::malloc(size_t size)
         fail("Out of memory!");
 
     s_lock.enter();
+#ifdef _MSC_VER
     s_memoryUsed += _msize(ptr);
+#else
+    s_memoryUsed += malloc_usable_size(ptr);
+#endif
     s_lock.leave();
 #endif
 
@@ -177,7 +181,11 @@ void FW::free(void* ptr)
 
 #else
     s_lock.enter();
+#ifdef _MSC_VER
     s_memoryUsed -= _msize(ptr);
+#else
+    s_memoryUsed -= malloc_usable_size(ptr);
+#endif
     s_lock.leave();
 
     ::free(ptr);
@@ -203,13 +211,22 @@ void* FW::realloc(void* ptr, size_t size)
     FW::free(ptr);
 
 #else
+#ifdef _MSC_VER
     size_t oldSize = _msize(ptr);
+#else
+    size_t oldSize = malloc_usable_size(ptr);
+#endif
+
     void* newPtr = ::realloc(ptr, size);
     if (!newPtr)
         fail("Out of memory!");
 
     s_lock.enter();
+#ifdef _MSC_VER
     s_memoryUsed += _msize(newPtr) - oldSize;
+#else
+    s_memoryUsed += malloc_usable_size(newPtr) - oldSize;
+#endif
     s_lock.leave();
 #endif
 
@@ -338,6 +355,7 @@ void FW::fail(const char* fmt, ...)
 
 //------------------------------------------------------------------------
 
+#ifdef _WIN32
 void FW::failWin32Error(const char* funcName)
 {
     DWORD err = GetLastError();
@@ -351,6 +369,7 @@ void FW::failWin32Error(const char* funcName)
     else
         fail("%s() failed!\nError %d\n", funcName, err);
 }
+#endif
 
 //------------------------------------------------------------------------
 

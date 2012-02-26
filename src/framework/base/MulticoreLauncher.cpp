@@ -176,9 +176,13 @@ void MulticoreLauncher::popAll(const String& progressMessage)
 
 int MulticoreLauncher::getNumCores(void)
 {
+#ifdef _MSC_VER
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     return si.dwNumberOfProcessors;
+#else
+    return std::max(1l, sysconf(_SC_NPROCESSORS_ONLN));
+#endif
 }
 
 //------------------------------------------------------------------------

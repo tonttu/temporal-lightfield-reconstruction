@@ -315,8 +315,13 @@ String FW::getDateString(void)
     char buffer[256];
     time_t currTime;
     time(&currTime);
+#ifdef _MSC_VER
     if (ctime_s(buffer, sizeof(buffer), &currTime) != 0)
         fail("ctime_s() failed!");
+#else
+    if (ctime_r(&currTime, buffer) != 0)
+        fail("ctime_r() failed!");
+#endif
 
     // Strip linefeed.
 

@@ -28,8 +28,6 @@
 #include "base/Random.hpp"
 #include "base/DLLImports.hpp"
 
-using namespace FW;
-
 //------------------------------------------------------------------------
 
 #define FW_USE_MERSENNE_TWISTER 0
@@ -45,6 +43,10 @@ extern "C"
 }
 #endif
 
+#ifndef _MSC_VER
+#include <sys/time.h>
+#endif
+
 //------------------------------------------------------------------------
 // RANROT-A
 //------------------------------------------------------------------------
@@ -52,12 +54,12 @@ extern "C"
 class RanrotA
 {
 private:
-    S32     p1;
-    S32     p2;
-    U32     buffer[11];
+    FW::S32     p1;
+    FW::S32     p2;
+    FW::U32     buffer[11];
 
 public:
-    void reset(U32 seed)
+    void reset(FW::U32 seed)
     {
         if (seed == 0)
             seed--;
@@ -77,9 +79,9 @@ public:
             get();
     }
 
-    U32 get(void)
+    FW::U32 get(void)
     {
-        U32 x = buffer[p1] + buffer[p2];
+        FW::U32 x = buffer[p1] + buffer[p2];
         x = (x << 13) | (x >> 19);
         buffer[p1] = x;
 
@@ -91,16 +93,28 @@ public:
     }
 };
 
+namespace FW
+{
+
 //------------------------------------------------------------------------
 // Common functionality.
 //------------------------------------------------------------------------
 
 void Random::reset(void)
 {
+#ifdef _MSC_VER
     LARGE_INTEGER ticks;
     if (!QueryPerformanceCounter(&ticks))
         failWin32Error("QueryPerformanceCounter");
     reset(ticks.LowPart);
+#else
+    struct timeval tv;
+    if (gettimeofday(&tv, 0) == 0) {
+        reset(tv.tv_usec);
+    } else {
+        reset((long)this);
+    }
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -238,3 +252,5 @@ U32 Random::getImpl(void)
 }
 
 //------------------------------------------------------------------------
+
+}
