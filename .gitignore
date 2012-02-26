@@ -6,3 +6,9 @@ Thumbs.db
 ._.DS_Store
 ._AppleDouble
 state_reconstruction_app*.dat
+*~
+*.pro.user
+.*swp
+cudacache
+build-*
+build

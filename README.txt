@@ -1,3 +1,30 @@
+This is a Linux / Qt port of the original Visual Studio -only implementation.
+
+Code works with GCC or Clang++.
+
+Compile instructions on Debian
+==============================
+
+- Install at least packages nvidia-cuda-toolkit and libqt4-dev
+
+- mkdir build-release && cd build-release && qmake -config release -r ../src && make -j4
+
+- Run reconstruction_app/reconstruction_app
+
+
+Compile without CUDA or GCC
+---------------------------
+
+- From src/src.pri, set FW_USE_CUDA to 0
+
+- Add something like this to the same file if you wish to change the compiler:
+  QMAKE_CXX = clang++
+  QMAKE_CC = clang
+
+
+The rest of this file is more or less out of date.
+
+
 ***********************************************************************
 *** An implementation of
 ***
@@ -10,8 +37,8 @@
 *** http://dx.doi.org/10.1145/1964921.1964950
 ***********************************************************************
 
-System requirements
-===================
+System requirements (outdated)
+==============================
 
 - Microsoft Windows XP, Vista, or 7. Developed and tested only on Windows 7 x64.
 
