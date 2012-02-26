@@ -31,8 +31,24 @@
 #include "io/File.hpp"
 #include "gui/Window.hpp"
 
-#include <process.h>
+#ifdef _MSC_VER
+#   include <process.h>
+#endif
+
 #include <stdio.h>
+
+namespace
+{
+#ifdef _WIN32
+#   define NVCC "nvcc.exe"
+#   define SEPARATOR "\\"
+#   define LIST_SEPARATOR ';'
+#else
+#   define NVCC "nvcc"
+#   define SEPARATOR "/"
+#   define LIST_SEPARATOR ':'
+#endif
+}
 
 using namespace FW;
 
@@ -196,8 +212,10 @@ void CudaCompiler::staticInit(void)
 
     // List potential CUDA and Visual Studio paths.
 
-    F32 driverVersion = CudaModule::getDriverVersion() / 10.0f;
     Array<String> potentialCudaPaths;
+
+#ifdef _WIN32
+    F32 driverVersion = CudaModule::getDriverVersion() / 10.0f;
     Array<String> potentialVSPaths;
 
     for (char drive = 'C'; drive <= 'E'; drive++)
@@ -212,7 +230,9 @@ void CudaCompiler::staticInit(void)
         }
         potentialCudaPaths.add(sprintf("%c:\\CUDA", drive));
     }
-
+#else
+    potentialCudaPaths.add("/usr");
+#endif
     // Query environment variables.
 
     String pathEnv      = queryEnv("PATH");
@@ -231,27 +251,35 @@ void CudaCompiler::staticInit(void)
         splitPathList(cudaBinList, pathEnv);
         for (int i = 0; i < potentialCudaPaths.getSize(); i++)
         {
-            cudaBinList.add(potentialCudaPaths[i] + "\\bin");
-            cudaBinList.add(potentialCudaPaths[i] + "\\bin64");
+            cudaBinList.add(potentialCudaPaths[i] + SEPARATOR"bin");
+            cudaBinList.add(potentialCudaPaths[i] + SEPARATOR"bin64");
         }
     }
 
     String cudaBinPath;
     for (int i = 0; i < cudaBinList.getSize(); i++)
     {
-        if (!cudaBinList[i].getLength() || !fileExists(cudaBinList[i] + "\\nvcc.exe"))
+        if (!cudaBinList[i].getLength() || !fileExists(cudaBinList[i] + SEPARATOR NVCC))
             continue;
 
         // Execute "nvcc --version".
 
-        FILE* pipe = _popen(sprintf("\"%s\\nvcc.exe\" --version 2>nul", cudaBinList[i].getPtr()).getPtr(), "rt");
+#ifdef _MSC_VER
+        FILE* pipe = _popen(sprintf("\"%s"SEPARATOR NVCC"\" --version 2>nul", cudaBinList[i].getPtr()).getPtr(), "rt");
+#else
+        FILE* pipe = popen((String("\"") + cudaBinList[i] + SEPARATOR NVCC"\" --version 2>/dev/null").getPtr(), "r");
+#endif
         if (!pipe)
             continue;
 
         Array<char> output;
         while (!feof(pipe))
             output.add((char)fgetc(pipe));
+#ifdef _MSC_VER
         fclose(pipe);
+#else
+        pclose(pipe);
+#endif
 
         // Invalid response => ignore.
 
@@ -271,7 +299,7 @@ void CudaCompiler::staticInit(void)
         fail("Unable to detect CUDA Toolkit binary path!\nPlease set CUDA_BIN_PATH environment variable.");
 
     // Find Visual Studio binary path.
-
+#ifdef _MSC_VER
     Array<String> vsBinList;
     splitPathList(vsBinList, pathEnv);
     for (int i = 0; i < potentialVSPaths.getSize(); i++)
@@ -289,20 +317,26 @@ void CudaCompiler::staticInit(void)
 
     if (!vsBinPath.getLength())
         fail("Unable to detect Visual Studio binary path!\nPlease run VCVARS32.BAT.");
+#endif
 
     // Find CUDA include path.
 
     Array<String> cudaIncList;
-    cudaIncList.add(cudaBinPath + "\\..\\include");
+    cudaIncList.add(cudaBinPath + SEPARATOR".."SEPARATOR"include");
     cudaIncList.add(cudaIncEnv);
     splitPathList(cudaIncList, includeEnv);
+#ifdef _WIN32
     cudaIncList.add("C:\\CUDA\\include");
     cudaIncList.add("D:\\CUDA\\include");
+#else
+    cudaIncList.add("/usr/include");
+    cudaIncList.add("/usr/lib/nvidia-cuda-toolkit/include");
+#endif
 
     String cudaIncPath;
     for (int i = 0; i < cudaIncList.getSize(); i++)
     {
-        if (cudaIncList[i].getLength() && fileExists(cudaIncList[i] + "\\cuda.h"))
+        if (cudaIncList[i].getLength() && fileExists(cudaIncList[i] + SEPARATOR"cuda.h"))
         {
             cudaIncPath = cudaIncList[i];
             break;
@@ -314,6 +348,7 @@ void CudaCompiler::staticInit(void)
 
     // Find Visual Studio include path.
 
+#ifdef _MSC_VER
     Array<String> vsIncList;
     vsIncList.add(vsBinPath + "\\..\\INCLUDE");
     splitPathList(vsIncList, includeEnv);
@@ -332,15 +367,23 @@ void CudaCompiler::staticInit(void)
 
     if (!vsIncPath.getLength())
         fail("Unable to detect Visual Studio include path!\nPlease run VCVARS32.BAT.");
+#endif
 
     // Form NVCC command line.
 
-    s_nvccCommand = sprintf("set PATH=%s;%s & nvcc.exe -ccbin \"%s\" -I\"%s\" -I\"%s\" -I. -D_CRT_SECURE_NO_DEPRECATE",
+#ifdef _MSV_VER
+    s_nvccCommand = sprintf("set PATH=%s;%s & "NVCC" -ccbin \"%s\" -I\"%s\" -I\"%s\" -I. -D_CRT_SECURE_NO_DEPRECATE",
         cudaBinPath.getPtr(),
         pathEnv.getPtr(),
         vsBinPath.getPtr(),
         cudaIncPath.getPtr(),
         vsIncPath.getPtr());
+#else
+    s_nvccCommand = sprintf("PATH=%s:%s "NVCC" -I\"%s\" -I.",
+        cudaBinPath.getPtr(),
+        pathEnv.getPtr(),
+        cudaIncPath.getPtr());
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -379,6 +422,7 @@ void CudaCompiler::flushMemCache(void)
 
 String CudaCompiler::queryEnv(const String& name)
 {
+#ifdef _MSC_VER
     // Query buffer size.
 
     DWORD bufferSize = GetEnvironmentVariable(name.getPtr(), NULL, 0);
@@ -396,6 +440,10 @@ String CudaCompiler::queryEnv(const String& name)
     String res = buffer;
     delete[] buffer;
     return res;
+#else
+    const char* tmp = getenv(name.getPtr());
+    return tmp ? tmp : "";
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -404,7 +452,7 @@ void CudaCompiler::splitPathList(Array<String>& res, const String& value)
 {
     for (int startIdx = 0; startIdx < value.getLength();)
     {
-        int endIdx = value.indexOf(';', startIdx);
+        int endIdx = value.indexOf(LIST_SEPARATOR, startIdx);
         if (endIdx == -1)
             endIdx = value.getLength();
 
@@ -511,7 +559,7 @@ void CudaCompiler::createCacheDir(void)
 
 void CudaCompiler::writeDefineFile(void)
 {
-    File file(m_cachePath + "\\defines.inl", File::Create);
+    File file(m_cachePath + SEPARATOR"defines.inl", File::Create);
     BufferedOutputStream out(file);
     for (int i = m_defines.firstSlot(); i != -1; i = m_defines.nextSlot(i))
         out.writef("#define %s %s\n",
@@ -543,8 +591,8 @@ void CudaCompiler::runPreprocessor(String& cubinFile, String& finalOpts)
         finalOpts += s_staticOptions + " ";
     finalOpts += m_options;
 
-    String logFile = m_cachePath + "\\preprocess.log";
-    String cmd = sprintf("%s -E -o \"%s\\preprocessed.cu\" -include \"%s\\defines.inl\" %s \"%s\" 2>>\"%s\"",
+    String logFile = m_cachePath + SEPARATOR"preprocess.log";
+    String cmd = sprintf("%s -E -o \"%s"SEPARATOR"preprocessed.cu\" -include \"%s"SEPARATOR"defines.inl\" %s \"%s\" 2>>\"%s\"",
         s_nvccCommand.getPtr(),
         m_cachePath.getPtr(),
         m_cachePath.getPtr(),
@@ -570,7 +618,7 @@ void CudaCompiler::runPreprocessor(String& cubinFile, String& finalOpts)
     // Hash and find inline compiler options.
 
     String optionPrefix = "// EMIT_NVCC_OPTIONS ";
-    File file(m_cachePath + "\\preprocessed.cu", File::Read);
+    File file(m_cachePath + SEPARATOR"preprocessed.cu", File::Read);
     BufferedInputStream in(file);
 
     U32 hashA = FW_HASH_MAGIC;
@@ -642,15 +690,15 @@ void CudaCompiler::runPreprocessor(String& cubinFile, String& finalOpts)
     hashA += hash<String>(finalOpts);
     hashB += s_nvccVersionHash;
     FW_JENKINS_MIX(hashA, hashB, hashC);
-    cubinFile = sprintf("%s\\%08x%08x.cubin", m_cachePath.getPtr(), hashB, hashC);
+    cubinFile = sprintf("%s"SEPARATOR"%08x%08x.cubin", m_cachePath.getPtr(), hashB, hashC);
 }
 
 //------------------------------------------------------------------------
 
 void CudaCompiler::runCompiler(const String& cubinFile, const String& finalOpts)
 {
-    String logFile = m_cachePath + "\\compile.log";
-    String cmd = sprintf("%s -o \"%s\" -include \"%s\\defines.inl\" %s \"%s\" 2>>\"%s\"",
+    String logFile = m_cachePath + SEPARATOR"compile.log";
+    String cmd = sprintf("%s -o \"%s\" -include \"%s"SEPARATOR"defines.inl\" %s \"%s\" 2>>\"%s\"",
         s_nvccCommand.getPtr(),
         cubinFile.getPtr(),
         m_cachePath.getPtr(),
