@@ -226,7 +226,7 @@ namespace FW
 #define FW_KEY_VERTICAL_BAR         "U+007C"                // The Vertical Line (Vertical Bar, Pipe) key (|).
 #define FW_KEY_RIGHT_CURLY_BRACKET  "U+007D"                // The Right Curly Bracket (Closing Curly Bracket, Closing Brace, Brace Right) key (}).
 #define FW_KEY_DELETE               "U+007F"                // The Delete (Del) Key.
-#define FW_KEY_INVERTED_EXCLAMATION "U+00A1"                // The Inverted Exclamation Mark key (¡).
+#define FW_KEY_INVERTED_EXCLAMATION "U+00A1"                // The Inverted Exclamation Mark key (Â¡).
 #define FW_KEY_DEAD_GRAVE           "U+0300"                // The Combining Grave Accent (Greek Varia, Dead Grave) key.
 #define FW_KEY_DEAD_ACUTE           "U+0301"                // The Combining Acute Accent (Stress Mark, Greek Oxia, Tonos, Dead Eacute) key.
 #define FW_KEY_DEAD_CIRCUMFLEX      "U+0302"                // The Combining Circumflex Accent (Hat, Dead Circumflex) key.
@@ -241,7 +241,7 @@ namespace FW
 #define FW_KEY_DEAD_CEDILLA         "U+0327"                // The Combining Cedilla (Dead Cedilla) key.
 #define FW_KEY_DEAD_OGONEK          "U+0328"                // The Combining Ogonek (Nasal Hook, Dead Ogonek) key.
 #define FW_KEY_DEAD_IOTA            "U+0345"                // The Combining Greek Ypogegrammeni (Greek Non-Spacing Iota Below, Iota Subscript, Dead Iota) key.
-#define FW_KEY_EURO                 "U+20AC"                // The Euro Currency Sign key (€).
+#define FW_KEY_EURO                 "U+20AC"                // The Euro Currency Sign key (â‚¬).
 #define FW_KEY_DEAD_VOICED          "U+3099"                // The Combining Katakana-Hiragana Voiced Sound Mark (Dead Voiced Sound) key.
 #define FW_KEY_DEAD_SEMIVOICED      "U+309A"                // The Combining Katakana-Hiragana Semi-Voiced Sound Mark (Dead Semivoiced Sound) key.
 
