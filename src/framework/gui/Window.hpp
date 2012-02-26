@@ -34,6 +34,10 @@
 #include "base/DLLImports.hpp"
 #include "gpu/GLContext.hpp"
 
+#ifdef FW_QT
+class QWindow;
+#endif
+
 namespace FW
 {
 //------------------------------------------------------------------------
@@ -129,8 +133,13 @@ public:
 
     static void             staticInit          (void);
     static void             staticDeinit        (void);
+#ifdef FW_QT
+    bool                    event(bool activate = false);
+    bool                    event(QEvent* ev);
+#else
     static HWND             createHWND          (void);
     static UPTR             setWindowLong       (HWND hwnd, int idx, UPTR value);
+#endif
     static int              getNumOpen          (void)          { return (s_inited) ? s_open->getSize() : 0; }
     static void             realizeAll          (void);
     static void             pollMessages        (void);
@@ -147,8 +156,10 @@ private:
     void                    destroy             (void);
     void                    recreate            (void);
 
+#ifndef FW_QT
     static LRESULT CALLBACK staticWindowProc    (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     LRESULT                 windowProc          (UINT uMsg, WPARAM wParam, LPARAM lParam);
+#endif
 
 private:
                             Window              (const Window&); // forbidden
@@ -159,8 +170,12 @@ private:
     static Array<Window*>*  s_open;
     static bool             s_ignoreRepaint;    // Prevents re-entering repaintNow() on Win32 or OpenGL failure.
 
+#ifdef FW_QT
+    QWindow*                m_window;
+#else
     HWND                    m_hwnd;
     HDC                     m_hdc;
+#endif
 
     GLContext::Config       m_glConfig;
     bool                    m_glConfigDirty;
@@ -173,9 +188,10 @@ private:
     String                  m_title;
     bool                    m_isFullScreen;
     Vec2i                   m_pendingSize;
+#ifndef FW_QT
     DWORD                   m_origStyle;
     RECT                    m_origRect;
-
+#endif
     Set<String>             m_keysDown;
     bool                    m_pendingKeyFlush;
 

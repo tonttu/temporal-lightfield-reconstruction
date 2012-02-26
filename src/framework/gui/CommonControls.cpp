@@ -33,6 +33,12 @@
 
 #include <stdio.h>
 
+#ifdef FW_QT
+#include "base/Main.hpp"
+#include <QFileInfo>
+#include <QDateTime>
+#endif
+
 using namespace FW;
 
 //------------------------------------------------------------------------
@@ -66,6 +72,11 @@ CommonControls::CommonControls(U32 features)
 
     // Query executable path and file name.
 
+#ifdef FW_QT
+    QFileInfo fi(FW::argv[0]);
+    m_stateFilePrefix = sprintf("state_%s_", fi.baseName().toUtf8().data());
+    m_screenshotFilePrefix = sprintf("screenshot_%s_", fi.baseName().toUtf8().data());
+#else
     char moduleFullName[256];
     GetModuleFileName(GetModuleHandle(NULL), moduleFullName, sizeof(moduleFullName) - 1);
     moduleFullName[sizeof(moduleFullName) - 1] = '\0';
@@ -83,6 +94,7 @@ CommonControls::CommonControls(U32 features)
 
     m_stateFilePrefix = sprintf("state_%s_", moduleShortName);
     m_screenshotFilePrefix = sprintf("screenshot_%s_", moduleShortName);
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -333,15 +345,21 @@ void CommonControls::resetControls(void)
 
 String CommonControls::getScreenshotFileName(void) const
 {
+    String name = m_screenshotFilePrefix;
+#ifdef FW_QT
+    U64 stamp = QDateTime::currentMSecsSinceEpoch();
+    for (int i = 44; i >= 0; i -= 4)
+        name += (char)('a' + ((stamp >> i) & 15));
+#else
     SYSTEMTIME st;
     FILETIME ft;
     GetSystemTime(&st);
     SystemTimeToFileTime(&st, &ft);
     U64 stamp = *(const U64*)&ft;
 
-    String name = m_screenshotFilePrefix;
     for (int i = 60; i >= 0; i -= 4)
         name += (char)('a' + ((stamp >> i) & 15));
+#endif
     name += ".png";
     return name;
 }
