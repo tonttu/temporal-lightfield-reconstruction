@@ -70,12 +70,22 @@ String& String::setf(const char* fmt, ...)
 
 String& String::setfv(const char* fmt, va_list args)
 {
+#ifdef _MSC_VER
     int len = _vscprintf(fmt, args);
+#else
+    va_list tmp;
+    va_copy(tmp, args);
+    int len = vsnprintf(0, 0, fmt, tmp);
+#endif
     if (!len)
         return reset();
 
     m_chars.reset(len + 1);
+#ifdef _MSC_VER
     vsprintf_s(m_chars.getPtr(), len + 1, fmt, args);
+#else
+    vsnprintf(m_chars.getPtr(), len + 1, fmt, args);
+#endif
     return *this;
 }
 
@@ -206,9 +216,19 @@ String& String::appendf(const char* fmt, ...)
 String& String::appendfv(const char* fmt, va_list args)
 {
     int lenA = getLength();
+#ifdef _MSC_VER
     int lenB = _vscprintf(fmt, args);
+#else
+    va_list tmp;
+    va_copy(tmp, args);
+    int lenB = vsnprintf(0, 0, fmt, tmp);
+#endif
     m_chars.resize(lenA + lenB + 1);
+#ifdef _MSC_VER
     vsprintf_s(m_chars.getPtr(lenA), lenB + 1, fmt, args);
+#else
+    vsnprintf(m_chars.getPtr(lenA), lenB + 1, fmt, args);
+#endif
     return *this;
 }
 

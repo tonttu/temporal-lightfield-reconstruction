@@ -249,7 +249,13 @@ void BufferedOutputStream::writef(const char* fmt, ...)
 void BufferedOutputStream::writefv(const char* fmt, va_list args)
 {
     int space = m_buffer.getSize() - m_numValid;
+#ifdef _MSC_VER
     int size = vsnprintf_s((char*)m_buffer.getPtr(m_numValid), space, space - 1, fmt, args);
+#else
+    va_list tmp;
+    va_copy(tmp, args);
+    int size = vsnprintf((char*)m_buffer.getPtr(m_numValid), space, fmt, tmp);
+#endif
     if (size >= 0)
     {
         addValid(size);
@@ -257,13 +263,26 @@ void BufferedOutputStream::writefv(const char* fmt, va_list args)
     }
 
     flushInternal();
+#ifdef _MSC_VER
     size = _vscprintf(fmt, args);
+#else
+    va_copy(tmp, args);
+    size = vsnprintf(0, 0, fmt, tmp);
+#endif
     if (size < m_buffer.getSize())
+#ifdef _MSC_VER
         addValid(vsprintf_s((char*)m_buffer.getPtr(), m_buffer.getSize(), fmt, args));
+#else
+        addValid(vsnprintf((char*)m_buffer.getPtr(), m_buffer.getSize(), fmt, args));
+#endif
     else
     {
         char* tmp = new char[size + 1];
+#ifdef _MSC_VER
         vsprintf_s(tmp, size + 1, fmt, args);
+#else
+        vsnprintf(tmp, size + 1, fmt, args);
+#endif
         m_stream.write(tmp, size);
         m_numFlushed += size;
         delete[] tmp;

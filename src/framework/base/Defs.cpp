@@ -241,9 +241,20 @@ void FW::printf(const char* fmt, ...)
     va_list args;
     va_start(args, fmt);
 
+#ifdef _MSC_VER
     vprintf(fmt, args);
     for (int i = 0; i < s_logFiles.getSize(); i++)
         s_logStreams[i]->writefv(fmt, args);
+#else
+    va_list tmp;
+    va_copy(tmp, args);
+    vprintf(fmt, tmp);
+    fflush(stdout);
+    for (int i = 0; i < s_logFiles.getSize(); i++) {
+        va_copy(tmp, args);
+        s_logStreams[i]->writefv(fmt, tmp);
+    }
+#endif
 
     va_end(args);
     s_lock.leave();
