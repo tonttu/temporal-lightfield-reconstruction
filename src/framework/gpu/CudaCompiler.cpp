@@ -37,6 +37,10 @@
 
 #include <stdio.h>
 
+#ifdef FW_QT
+#   include <QDir>
+#endif
+
 namespace
 {
 #ifdef _WIN32
@@ -469,7 +473,11 @@ void CudaCompiler::splitPathList(Array<String>& res, const String& value)
 
 bool CudaCompiler::fileExists(const String& name)
 {
+#ifdef FW_QT
+    return QFile::exists(name.getPtr());
+#else
     return ((GetFileAttributes(name.getPtr()) & FILE_ATTRIBUTE_DIRECTORY) == 0);
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -549,10 +557,17 @@ U64 CudaCompiler::getMemHash(void)
 
 void CudaCompiler::createCacheDir(void)
 {
+#ifdef FW_QT
+    QDir dir(m_cachePath.getPtr());
+    if (dir.exists()) return;
+    if (!dir.mkpath(m_cachePath.getPtr()))
+        fail("Cannot create CudaCompiler cache directory '%s'!", m_cachePath.getPtr());
+#else
     DWORD res = GetFileAttributes(m_cachePath.getPtr());
     if (res == 0xFFFFFFFF || (res & FILE_ATTRIBUTE_DIRECTORY) == 0)
         if (CreateDirectory(m_cachePath.getPtr(), NULL) == 0)
             fail("Cannot create CudaCompiler cache directory '%s'!", m_cachePath.getPtr());
+#endif
 }
 
 //------------------------------------------------------------------------

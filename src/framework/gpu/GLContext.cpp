@@ -44,9 +44,11 @@ const S32               GLContext::s_defaultFontSize    = 16;
 const U32               GLContext::s_defaultFontStyle   = FontStyle_Bold;
 
 bool                    GLContext::s_inited             = false;
+#ifndef FW_QT
 HWND                    GLContext::s_shareHWND          = NULL;
 HDC                     GLContext::s_shareHDC           = NULL;
 HGLRC                   GLContext::s_shareHGLRC         = NULL;
+#endif
 GLContext*              GLContext::s_headless           = NULL;
 GLContext*              GLContext::s_current            = NULL;
 bool                    GLContext::s_stereoAvailable    = false;
@@ -198,6 +200,7 @@ void GLContext::Program::init(
 
 //------------------------------------------------------------------------
 
+#ifndef FW_QT
 GLContext::GLContext(HDC hdc, HGLRC hglrc)
 {
     FW_ASSERT(hdc && hglrc);
@@ -242,16 +245,39 @@ GLContext::GLContext(HDC hdc, const Config& config)
 
 //------------------------------------------------------------------------
 
+#else
+
+//------------------------------------------------------------------------
+
+GLContext::GLContext(QGLContext * context)
+    : m_fontMetrics(m_font)
+{
+    staticInit();
+
+    init(context);
+}
+
+//------------------------------------------------------------------------
+
+#endif
+
+//------------------------------------------------------------------------
+
 GLContext::~GLContext(void)
 {
+#ifndef FW_QT
     DeleteObject(m_memdc);
     DeleteObject(m_vgFont);
+#endif
 
     if (s_current != s_headless)
     {
+        /// @todo Should make s_headless current
+#ifndef FW_QT
         if (s_current == this)
             s_headless->makeCurrent();
         wglDeleteContext(m_hglrc);
+#endif
     }
 }
 
@@ -263,8 +289,12 @@ void GLContext::makeCurrent(void)
     {
         checkErrors();
 
+#ifdef FW_QT
+        m_context->makeCurrent();
+#else
         if (!wglMakeCurrent(m_hdc, m_hglrc))
             failWin32Error("wglMakeCurrent");
+#endif
         s_current = this;
 
         checkErrors();
@@ -277,9 +307,13 @@ void GLContext::swapBuffers(void)
 {
     glFinish();
     checkErrors();
+#ifdef FW_QT
+    m_context->swapBuffers();
+#else
     if (GL_FUNC_AVAILABLE(wglSwapIntervalEXT))
         wglSwapIntervalEXT(0); // WGL_EXT_swap_control
     SwapBuffers(m_hdc);
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -412,6 +446,10 @@ void GLContext::strokeRect(const Vec4f& pos, const Vec2f& localSize, const Vec2f
 
 //------------------------------------------------------------------------
 
+#ifndef FW_QT
+
+//------------------------------------------------------------------------
+
 void GLContext::setFont(const String& name, int size, U32 style)
 {
     FW_ASSERT(size > 0);
@@ -441,12 +479,35 @@ void GLContext::setFont(const String& name, int size, U32 style)
 
 //------------------------------------------------------------------------
 
+#else
+
+//------------------------------------------------------------------------
+
+void GLContext::setFont(const String& name, int size, U32 style)
+{
+    QFont font(name.getPtr());
+    font.setPixelSize(size);
+    font.setBold(style & FontStyle_Bold);
+    font.setItalic(style & FontStyle_Italic);
+    setFont(font);
+}
+
+//------------------------------------------------------------------------
+
+#endif
+
+//------------------------------------------------------------------------
+
 Vec2i GLContext::getStringSize(const String& str)
 {
+#ifdef FW_QT
+    return Vec2i(m_fontMetrics.width(str.getPtr()), m_fontMetrics.height());
+#else
     SIZE size;
     if (!GetTextExtentPoint32(m_memdc, str.getPtr(), str.getLength(), &size))
         failWin32Error("GetTextExtentPoint32");
     return Vec2i(size.cx + m_vgFontMetrics.tmOverhang, size.cy);
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -542,8 +603,12 @@ void GLContext::drawModalMessage(const String& msg)
     glDisable(GL_DEPTH_TEST);
 
     Mat4f oldXform = setVGXform(Mat4f());
+#ifdef FW_QT
+    QFont oldFont = m_font;
+#else
     HFONT oldFont = m_vgFont;
     m_vgFont = NULL;
+#endif
     setFont("Arial", 32, GLContext::FontStyle_Normal);
 
     drawString(msg, Vec4f(Vec3f(0.0f), 1.0f), Vec2f(0.5f), 0xFFFFFFFF);
@@ -647,6 +712,8 @@ void GLContext::staticInit(void)
         return;
     s_inited = true;
 
+#ifndef FW_QT
+
     // Create window for the share context.
 
     s_shareHWND = Window::createHWND();
@@ -686,6 +753,7 @@ void GLContext::staticInit(void)
         fail("OpenGL 2.0 or later is required!");
 
     // Import extension functions.
+#endif
 
 #if FW_USE_GLEW
     GLenum err = glewInit();
@@ -698,13 +766,21 @@ void GLContext::staticInit(void)
     // Create wrapper GLContext.
 
     FW_ASSERT(!s_headless);
+#ifdef FW_QT
+    s_headless = new GLContext(new QGLContext(QGLFormat::defaultFormat()));
+#else
     s_headless = new GLContext(s_shareHDC, s_shareHGLRC);
+#endif
 
     // Determine whether stereo is available.
 
+#ifdef FW_QT
+    s_stereoAvailable = false;
+#else
     Config stereoConfig;
     stereoConfig.isStereo = true;
     s_stereoAvailable = s_headless->choosePixelFormat(formatIdx, s_shareHDC, stereoConfig);
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -736,6 +812,8 @@ void GLContext::staticDeinit(void)
 
     FW_ASSERT(s_headless);
     delete s_headless;
+
+#ifndef FW_QT
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(s_shareHGLRC);
     ReleaseDC(s_shareHWND, s_shareHDC);
@@ -744,6 +822,8 @@ void GLContext::staticDeinit(void)
     s_shareHWND     = NULL;
     s_shareHDC      = NULL;
     s_shareHGLRC    = NULL;
+#endif
+
     s_headless      = NULL;
     s_current       = NULL;
 }
@@ -773,6 +853,10 @@ void GLContext::checkErrors(void)
     if (name)
         fail("Caught GL error 0x%04x (%s)!", err, name);
 }
+
+//------------------------------------------------------------------------
+
+#ifndef FW_QT
 
 //------------------------------------------------------------------------
 
@@ -847,6 +931,14 @@ bool GLContext::choosePixelFormat(int& formatIdx, HDC hdc, const Config& config)
 
 //------------------------------------------------------------------------
 
+#endif
+
+//------------------------------------------------------------------------
+
+#ifndef FW_QT
+
+//------------------------------------------------------------------------
+
 void GLContext::init(HDC hdc, HGLRC hglrc)
 {
     FW_ASSERT(hdc && hglrc);
@@ -892,6 +984,46 @@ void GLContext::init(HDC hdc, HGLRC hglrc)
     if (oldContext)
         oldContext->makeCurrent();
 }
+
+//------------------------------------------------------------------------
+
+#else
+
+//------------------------------------------------------------------------
+
+void GLContext::init(QGLContext* context)
+{
+    FW_ASSERT(context);
+
+    // Initialize members.
+
+    m_context       = context;
+
+    m_viewPos       = 0;
+    m_viewSize      = 1;
+    m_viewScale     = 2.0f;
+    m_numAttribs    = 0;
+
+    // Setup text rendering.
+
+    setDefaultFont();
+
+    // Initialize GL state.
+
+    GLContext* oldContext = s_current;
+    makeCurrent();
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    checkErrors();
+
+    if (oldContext)
+        oldContext->makeCurrent();
+}
+
+//------------------------------------------------------------------------
+
+#endif
 
 //------------------------------------------------------------------------
 
@@ -956,6 +1088,22 @@ void GLContext::drawVG(const VGVertex* vertices, int numVertices, U32 abgr)
 
 //------------------------------------------------------------------------
 
+#ifdef FW_QT
+
+//------------------------------------------------------------------------
+
+void GLContext::setFont(QFont font)
+{
+    m_font = font;
+    m_fontMetrics = QFontMetrics(m_font);
+}
+
+//------------------------------------------------------------------------
+
+#else
+
+//------------------------------------------------------------------------
+
 void GLContext::setFont(HFONT font)
 {
     FW_ASSERT(font);
@@ -972,8 +1120,25 @@ void GLContext::setFont(HFONT font)
 
 //------------------------------------------------------------------------
 
+#endif
+
+//------------------------------------------------------------------------
+
 const Vec2i& GLContext::uploadString(const String& str, const Vec2i& strSize)
 {
+#ifdef FW_QT
+    QImage image(strSize.x, strSize.y, QImage::Format_ARGB32);
+    image.fill(QColor(0, 0, 0, 0));
+    QPainter painter(&image);
+    painter.setFont(m_font);
+    painter.scale(1, -1);
+    painter.setPen(QColor(255, 255, 255, 255));
+    painter.drawText(0, -strSize.y, strSize.x, strSize.y, Qt::AlignVCenter | Qt::AlignCenter, str.getPtr());
+    glActiveTexture(GL_TEXTURE0);
+    const Vec2i& texSize = bindTempTexture(strSize);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, strSize.x, strSize.y, GL_BGRA, GL_UNSIGNED_BYTE, image.bits());
+    return texSize;
+#else
     // Create word-oriented DIB.
 
     U8 bmi[sizeof(BITMAPINFOHEADER) + 3 * sizeof(DWORD)];
@@ -1020,6 +1185,7 @@ const Vec2i& GLContext::uploadString(const String& str, const Vec2i& strSize)
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, strSize.x, strSize.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
     DeleteObject(dib);
     return texSize;
+#endif
 }
 
 //------------------------------------------------------------------------

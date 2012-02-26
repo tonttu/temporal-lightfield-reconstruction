@@ -31,6 +31,10 @@
 #include "base/DLLImports.hpp"
 #include "base/Hash.hpp"
 
+#ifdef FW_QT
+#include <QGLContext>
+#endif
+
 namespace FW
 {
 //------------------------------------------------------------------------
@@ -134,8 +138,12 @@ private:
     //------------------------------------------------------------------------
 
 public:
+#ifdef FW_QT
+                        GLContext       (QGLContext* context);
+#else
                         GLContext       (HDC hdc, const Config& config = Config());
                         GLContext       (HDC hdc, HGLRC hglrc);
+#endif
                         ~GLContext      (void);
 
     const Config&       getConfig       (void) const        { return m_config; }
@@ -183,8 +191,11 @@ public:
 
     void                setFont         (const String& name, int size, U32 style);
     void                setDefaultFont  (void)              { setFont(s_defaultFontName, s_defaultFontSize, s_defaultFontStyle); }
-
+#ifdef FW_QT
+    int                 getFontHeight   (void) const        { return m_fontMetrics.height(); }
+#else
     int                 getFontHeight   (void) const        { return m_vgFontMetrics.tmHeight; }
+#endif
     Vec2i               getStringSize   (const String& str);
     Vec2i               drawString      (const String& str, const Vec4f& pos, const Vec2f& align, U32 abgr) { return drawLabel(str, pos, align, abgr, 0); }
     Vec2i               drawString      (const String& str, const Vec2f& pos, const Vec2f& align, U32 abgr) { return drawString(str, Vec4f(pos, 0.0f, 1.0f), align, abgr); }
@@ -208,11 +219,16 @@ public:
     static void         checkErrors     (void);
 
 private:
+#ifdef FW_QT
+    void                init            (QGLContext *context);
+    void                setFont         (QFont font);
+#else
     static bool         choosePixelFormat(int& formatIdx, HDC hdc, const Config& config);
-
     void                init            (HDC hdc, HGLRC hglrc);
-    void                drawVG          (const VGVertex* vertices, int numVertices, U32 abgr);
     void                setFont         (HFONT font);
+#endif
+    void                drawVG          (const VGVertex* vertices, int numVertices, U32 abgr);
+
     const Vec2i&        uploadString    (const String& str, const Vec2i& strSize); // returns texture size
     void                drawString      (const Vec4f& pos, const Vec2i& strSize, const Vec2i& texSize, const Vec4f& color);
     const Vec2i&        bindTempTexture (const Vec2i& size);
@@ -228,9 +244,13 @@ private:
     static const U32    s_defaultFontStyle;
 
     static bool         s_inited;
+#ifdef FW_QT
+    static QGLContext*  s_shareContext;
+#else
     static HWND         s_shareHWND;
     static HDC          s_shareHDC;
     static HGLRC        s_shareHGLRC;
+#endif
     static GLContext*   s_headless;
     static GLContext*   s_current;
     static bool         s_stereoAvailable;
@@ -240,9 +260,17 @@ private:
     static S32          s_tempTexBytes;
     static Hash<String, Program*>* s_programs;
 
+#ifdef FW_QT
+    QGLContext*         m_context;
+    QFont               m_font;
+    QFontMetrics        m_fontMetrics;
+#else
     HDC                 m_hdc;
     HDC                 m_memdc;
     HGLRC               m_hglrc;
+    HFONT               m_vgFont;
+    TEXTMETRIC          m_vgFontMetrics;
+#endif
     Config              m_config;
 
     Vec2i               m_viewPos;
@@ -251,8 +279,6 @@ private:
     S32                 m_numAttribs;
 
     Mat4f               m_vgXform;
-    HFONT               m_vgFont;
-    TEXTMETRIC          m_vgFontMetrics;
 };
 
 //------------------------------------------------------------------------
