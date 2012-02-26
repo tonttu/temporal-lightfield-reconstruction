@@ -104,6 +104,7 @@ void Buffer::free(Module module)
     case CPU:   cpuFree(m_cpuPtr, m_cpuBase, m_hints); break;
     case GL:    glFree(m_glBuffer, m_cudaGLReg); break;
     case Cuda:  cudaFree(m_cudaPtr, m_cudaBase, m_glBuffer, m_hints); break;
+    default: break;
     }
     m_exists &= ~module;
 }
@@ -378,8 +379,8 @@ void Buffer::init(S64 size, U32 hints, int align)
     m_cpuPtr    = NULL;
     m_cpuBase   = NULL;
     m_glBuffer  = 0;
-    m_cudaPtr   = NULL;
-    m_cudaBase  = NULL;
+    m_cudaPtr   = 0;
+    m_cudaBase  = 0;
     m_cudaGLReg = false;
 }
 
@@ -663,15 +664,15 @@ void Buffer::cudaAlloc(CUdeviceptr& cudaPtr, CUdeviceptr& cudaBase, bool& cudaGL
 
 void Buffer::cudaFree(CUdeviceptr& cudaPtr, CUdeviceptr& cudaBase, GLuint glBuffer, U32 hints)
 {
-    FW_ASSERT((cudaPtr == NULL) == (cudaBase == NULL));
+    FW_ASSERT((cudaPtr == 0) == (cudaBase == 0));
     if (cudaPtr)
     {
         if ((hints & Hint_CudaGL) == 0)
             CudaModule::checkError("cuMemFree", cuMemFree(cudaBase));
         else
             CudaModule::checkError("cuGLUnmapBufferObject", cuGLUnmapBufferObject(glBuffer));
-        cudaPtr = NULL;
-        cudaBase = NULL;
+        cudaPtr = 0;
+        cudaBase = 0;
     }
 }
 
@@ -746,10 +747,10 @@ void Buffer::memcpyXtoX(void* dstHost, CUdeviceptr dstDevice, const void* srcHos
     memcpyXtoX(dstHost, dstDevice, srcHost, srcDevice, mid, async, cudaStream);
 
     memcpyXtoX(
-        (dstHost) ? (U8*)dstHost + mid : NULL,
-        (dstHost) ? NULL : (CUdeviceptr)(dstDevice + mid),
-        (srcHost) ? (const U8*)srcHost + mid : NULL,
-        (srcHost) ? NULL : (CUdeviceptr)(srcDevice + mid),
+        (dstHost) ? (U8*)dstHost + mid : 0,
+        (dstHost) ? 0 : (CUdeviceptr)(dstDevice + mid),
+        (srcHost) ? (const U8*)srcHost + mid : 0,
+        (srcHost) ? 0 : (CUdeviceptr)(srcDevice + mid),
         size - mid, async, cudaStream);
 }
 

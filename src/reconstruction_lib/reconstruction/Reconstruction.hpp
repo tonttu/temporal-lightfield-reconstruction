@@ -134,8 +134,8 @@ private:
 	struct Stats
 	{
 		Stats() { memset(this,0,sizeof(Stats)); }
-		void	operator+=(const Stats& src)	{ Vec2d* d=(Vec2d*)this; const Vec2d* s=(const Vec2d*)(&src); for(int i=0;i<sizeof(Stats)/sizeof(Vec2d);i++) d[i] += s[i]; }
-		void	newOutputSample() const			{ Vec2d* d=(Vec2d*)this; for(int i=0;i<sizeof(Stats)/sizeof(Vec2d);i++) d[i] += Vec2d(0,1); }
+		void	operator+=(const Stats& src)	{ Vec2d* d=(Vec2d*)this; const Vec2d* s=(const Vec2d*)(&src); for(std::size_t i=0;i<sizeof(Stats)/sizeof(Vec2d);i++) d[i] += s[i]; }
+		void	newOutputSample() const			{ Vec2d* d=(Vec2d*)this; for(std::size_t i=0;i<sizeof(Stats)/sizeof(Vec2d);i++) d[i] += Vec2d(0,1); }
 		Vec2d	numLeafNodes;			// #leafnodes / output
 		Vec2d	numSamplesInLeafNodes;	// #samples in leafnodes / output
 		Vec2d	numSamplesWithin1R;		// #samples within 1R / output
@@ -178,7 +178,7 @@ private:
 
 	struct Node
 	{
-		Node()							{ child0=-1; }
+		Node()							{ child0=-1; child1 = -1; }
 		bool	isLeaf() const			{ return child0==-1; }
 
 		float	getExpectedCost() const
@@ -216,12 +216,12 @@ private:
 		}
 
 		Node(const Node& n0,const Node& n1)
-		{
 			// merge bounds
-			tlb = TimeLensBounds(n0.tlb, n1.tlb);
-			ns    = n0.ns + n1.ns;
-			child0= -1;
-		};
+			: tlb(TimeLensBounds(n0.tlb, n1.tlb)),
+			  child0(-1),
+			  child1(-1),
+			  ns(n0.ns + n1.ns)
+		{}
 
 		TimeLensBounds tlb;
 
@@ -289,7 +289,7 @@ private:
 	int						m_rootIndex;
 
 	Array<Sample>			m_samples;
-	Array<Array<Sample>>	m_reprojected;
+	Array<Array<Sample> >	m_reprojected;
 	int						m_reprojWidth;
 	int						m_reprojHeight;
 

@@ -34,7 +34,9 @@
 #define FW_USE_CUDA 0		// change this to 1 only if you have CUDA Toolkit 4.0 installed
 #endif
 
+#if !defined FW_USE_GLEW
 #define FW_USE_GLEW 0
+#endif
 
 //------------------------------------------------------------------------
 

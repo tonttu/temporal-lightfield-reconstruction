@@ -373,7 +373,7 @@ void TreeGather::reconstructDofMotionShadows	(Image& image, const TreeGather& sh
 	const Mat4f invCameraProjection = cameraProjection.inverted();
 	const Mat4f cameraToShadow  = shadowProjection * shadowParams.camera.getWorldToCamera() * cameraParams.camera.getCameraToWorld() * invCameraProjection;
 	const Mat4f cameraToShadow2 = shadowParams.camera.getWorldToCamera() * cameraParams.camera.getCameraToWorld();
-	const Mat4f cameraToShadowInvT  = cameraToShadow.inverted().transposed();
+    // const Mat4f cameraToShadowInvT  = cameraToShadow.inverted().transposed();
 	const Mat4f cameraToShadow2InvT = cameraToShadow2.inverted().transposed();
 	const Mat4f cameraToWorldInvT = cameraParams.camera.getCameraToWorld().inverted().transposed();
 	const Mat4f ws    = Mat4f::scale(Vec3f(0.5f*w, 0.5f*h, 0.5f)) * Mat4f::translate(Vec3f(1.0f));	// [-1,1] -> [window size]

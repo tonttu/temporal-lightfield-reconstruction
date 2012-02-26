@@ -120,8 +120,10 @@ Image* FW::importTargaImage(InputStream& stream)
             {
                 stream.readFully(ptr, bpp);
                 ptr += bpp;
-                while (ptr < end)
-                    *ptr++ = ptr[-bpp];
+                while (ptr < end) {
+                    *ptr = ptr[-bpp];
+                    ++ptr;
+                }
             }
         }
     }

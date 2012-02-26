@@ -34,6 +34,28 @@
 
 using namespace FW;
 
+namespace
+{
+
+struct Vertex
+{
+    Vec3f   pos;
+    F32     error;
+    F32     posWeight;
+    F32     outWeight;
+    S32     firstEdge;
+    S32     timeStamp;
+    S32     outIdx;
+};
+
+struct Edge
+{
+    Vec2i   verts;
+    Vec2i   next;
+};
+
+}
+
 //------------------------------------------------------------------------
 
 int MeshBase::addAttrib(AttribType type, AttribFormat format, int length)
@@ -861,23 +883,6 @@ void MeshBase::fixMaterialColors(void)
 
 void MeshBase::simplify(F32 maxError)
 {
-    struct Vertex
-    {
-        Vec3f   pos;
-        F32     error;
-        F32     posWeight;
-        F32     outWeight;
-        S32     firstEdge;
-        S32     timeStamp;
-        S32     outIdx;
-    };
-
-    struct Edge
-    {
-        Vec2i   verts;
-        Vec2i   next;
-    };
-
     // Find attributes.
 
     int posAttrib = findAttrib(MeshBase::AttribType_Position);

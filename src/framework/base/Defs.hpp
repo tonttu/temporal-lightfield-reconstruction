@@ -45,7 +45,7 @@ namespace FW
 #   define FW_DEBUG 0
 #endif
 
-#ifdef _M_X64
+#if defined(_M_X64) || defined(__amd64__)
 #   define FW_64    1
 #else
 #   define FW_64    0
@@ -209,10 +209,10 @@ FW_SPECIALIZE_MINMAX(, F64, ::fmin(a, b), ::fmax(a, b))
 
 #if !FW_CUDA
 
-inline void*    operator new        (size_t size)       { return FW::malloc(size); }
-inline void*    operator new[]      (size_t size)       { return FW::malloc(size); }
-inline void     operator delete     (void* ptr)         { return FW::free(ptr); }
-inline void     operator delete[]   (void* ptr)         { return FW::free(ptr); }
+inline void* operator new      (size_t size) throw (std::bad_alloc) { return FW::malloc(size); }
+inline void* operator new[]    (size_t size) throw (std::bad_alloc) { return FW::malloc(size); }
+inline void  operator delete   (void* ptr) throw()                  { return FW::free(ptr); }
+inline void  operator delete[] (void* ptr) throw()                  { return FW::free(ptr); }
 
 #endif
 

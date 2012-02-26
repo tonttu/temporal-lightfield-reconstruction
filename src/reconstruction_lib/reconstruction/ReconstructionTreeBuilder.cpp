@@ -313,7 +313,7 @@ void TreeGather::buildRecursive(int nodeIndex, int maxFrontierSize, Array<Node>&
 								boxa[test].x, boxb[test].x, boxaT1[test].x, boxbT1[test].x,
 								boxa[test].y, boxb[test].y, boxaT1[test].y, boxbT1[test].y,
 								testmv.x, testmv.y );
-					}/**/
+					}*/
 
 					if( bIntersect )
 					{

@@ -254,7 +254,7 @@ void CudaModule::setTexRef(const String& name, const Image& image, bool wrap, bo
 void CudaModule::unsetTexRef(const String& name)
 {
     CUtexref texRef = getTexRef(name);
-    checkError("cuTexRefSetAddress", cuTexRefSetAddress(NULL, texRef, NULL, 0));
+    checkError("cuTexRefSetAddress", cuTexRefSetAddress(NULL, texRef, 0, 0));
 }
 
 //------------------------------------------------------------------------
@@ -428,7 +428,7 @@ void CudaModule::staticDeinit(void)
         checkError("cuCtxDestroy", cuCtxDestroy(s_context));
     s_context = NULL;
 
-    s_device = NULL;
+    s_device = 0;
 }
 
 //------------------------------------------------------------------------

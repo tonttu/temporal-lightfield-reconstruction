@@ -113,9 +113,9 @@ public:
     virtual void    readFromStream      (InputStream& s);
     virtual void    writeToStream       (OutputStream& s) const;
 
-    static void     memcpyHtoD          (CUdeviceptr dst, const void* src, S64 size, bool async = false, CUstream cudaStream = NULL) { memcpyXtoX(NULL, dst, src, NULL, size, async, cudaStream); }
-    static void     memcpyDtoH          (void* dst, CUdeviceptr src, S64 size, bool async = false, CUstream cudaStream = NULL) { memcpyXtoX(dst, NULL, NULL, src, size, async, cudaStream); }
-    static void     memcpyDtoD          (CUdeviceptr dst, CUdeviceptr src, S64 size, bool async = false, CUstream cudaStream = NULL) { memcpyXtoX(NULL, dst, NULL, src, size, async, cudaStream); }
+    static void     memcpyHtoD          (CUdeviceptr dst, const void* src, S64 size, bool async = false, CUstream cudaStream = NULL) { memcpyXtoX(0, dst, src, 0, size, async, cudaStream); }
+    static void     memcpyDtoH          (void* dst, CUdeviceptr src, S64 size, bool async = false, CUstream cudaStream = NULL) { memcpyXtoX(dst, 0, 0, src, size, async, cudaStream); }
+    static void     memcpyDtoD          (CUdeviceptr dst, CUdeviceptr src, S64 size, bool async = false, CUstream cudaStream = NULL) { memcpyXtoX(0, dst, 0, src, size, async, cudaStream); }
 
 private:
     static U32      validateHints       (U32 hints, int align, Module original);

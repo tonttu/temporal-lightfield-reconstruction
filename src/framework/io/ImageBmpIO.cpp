@@ -336,7 +336,7 @@ void FW::exportBmpImage(OutputStream& stream, const Image* image)
 
     for (int y = size.y - 1; y >= 0; y--)
     {
-        const U8* ptr = (const U8*)image->getPtr(Vec2i(0, y));
+        const U8* ptr = (const U8*)source->getPtr(Vec2i(0, y));
         for (int x = 0; x < size.x; x++)
         {
             stream.writeU8(ptr[2]);

@@ -313,6 +313,7 @@ U32 Image::getABGR(const Vec2i& pos) const
                 case ImageFormat::ChannelType_G:    value |= v << 8; break;
                 case ImageFormat::ChannelType_B:    value |= v << 16; break;
                 case ImageFormat::ChannelType_A:    value |= v << 24; hasAlpha = true; break;
+                default: fail("m_format.getChannel(%d).type == %d", i, m_format.getChannel(i).type); break;
                 }
             }
 

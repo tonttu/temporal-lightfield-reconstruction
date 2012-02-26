@@ -28,70 +28,70 @@
 #pragma once
 #include "base/DLLImports.hpp"
 
-#include <math.h>
+#include <cmath>
 
 namespace FW
 {
 //------------------------------------------------------------------------
 
-FW_CUDA_FUNC F32    sqrt            (F32 a)         { return ::sqrtf(a); }
-FW_CUDA_FUNC F64    sqrt            (F64 a)         { return ::sqrt(a); }
+FW_CUDA_FUNC F32    sqrt            (F32 a)         { return std::sqrt(a); }
+FW_CUDA_FUNC F64    sqrt            (F64 a)         { return std::sqrt(a); }
 FW_CUDA_FUNC S32    abs             (S32 a)         { return (a >= 0) ? a : -a; }
 FW_CUDA_FUNC S64    abs             (S64 a)         { return (a >= 0) ? a : -a; }
-FW_CUDA_FUNC F32    abs             (F32 a)         { return ::fabsf(a); }
-FW_CUDA_FUNC F64    abs             (F64 a)         { return ::abs(a); }
-FW_CUDA_FUNC F64    pow             (F64 a, F64 b)  { return ::pow(a, b); }
-FW_CUDA_FUNC F64    exp             (F64 a)         { return ::exp(a); }
-FW_CUDA_FUNC F64    log             (F64 a)         { return ::log(a); }
-FW_CUDA_FUNC F64    sin             (F64 a)         { return ::sin(a); }
-FW_CUDA_FUNC F64    cos             (F64 a)         { return ::cos(a); }
-FW_CUDA_FUNC F64    tan             (F64 a)         { return ::tan(a); }
-FW_CUDA_FUNC F32    asin            (F32 a)         { return ::asinf(a); }
-FW_CUDA_FUNC F64    asin            (F64 a)         { return ::asin(a); }
-FW_CUDA_FUNC F32    acos            (F32 a)         { return ::acosf(a); }
-FW_CUDA_FUNC F64    acos            (F64 a)         { return ::acos(a); }
-FW_CUDA_FUNC F32    atan            (F32 a)         { return ::atanf(a); }
-FW_CUDA_FUNC F64    atan            (F64 a)         { return ::atan(a); }
-FW_CUDA_FUNC F64    atan2           (F64 y, F64 x)  { return ::atan2(y, x); }
-FW_CUDA_FUNC F32    atan2           (F32 y, F32 x)  { return ::atan2f(y, x); }
-FW_CUDA_FUNC F32    floor           (F32 a)         { return ::floorf(a); }
-FW_CUDA_FUNC F64    floor           (F64 a)         { return ::floor(a); }
-FW_CUDA_FUNC F32    ceil            (F32 a)         { return ::ceilf(a); }
-FW_CUDA_FUNC F64    ceil            (F64 a)         { return ::ceil(a); }
-FW_CUDA_FUNC U64    doubleToBits    (F64 a)         { return *(U64*)&a; }
-FW_CUDA_FUNC F64    bitsToDouble    (U64 a)         { return *(F64*)&a; }
+FW_CUDA_FUNC F32    abs             (F32 a)         { return std::abs(a); }
+FW_CUDA_FUNC F64    abs             (F64 a)         { return std::abs(a); }
+FW_CUDA_FUNC F64    pow             (F64 a, F64 b)  { return std::pow(a, b); }
+FW_CUDA_FUNC F64    exp             (F64 a)         { return std::exp(a); }
+FW_CUDA_FUNC F64    log             (F64 a)         { return std::log(a); }
+FW_CUDA_FUNC F64    sin             (F64 a)         { return std::sin(a); }
+FW_CUDA_FUNC F64    cos             (F64 a)         { return std::cos(a); }
+FW_CUDA_FUNC F64    tan             (F64 a)         { return std::tan(a); }
+FW_CUDA_FUNC F32    asin            (F32 a)         { return std::asin(a); }
+FW_CUDA_FUNC F64    asin            (F64 a)         { return std::asin(a); }
+FW_CUDA_FUNC F32    acos            (F32 a)         { return std::acos(a); }
+FW_CUDA_FUNC F64    acos            (F64 a)         { return std::acos(a); }
+FW_CUDA_FUNC F32    atan            (F32 a)         { return std::atan(a); }
+FW_CUDA_FUNC F64    atan            (F64 a)         { return std::atan(a); }
+FW_CUDA_FUNC F64    atan2           (F64 y, F64 x)  { return std::atan2(y, x); }
+FW_CUDA_FUNC F32    atan2           (F32 y, F32 x)  { return std::atan2(y, x); }
+FW_CUDA_FUNC F32    floor           (F32 a)         { return std::floor(a); }
+FW_CUDA_FUNC F64    floor           (F64 a)         { return std::floor(a); }
+FW_CUDA_FUNC F32    ceil            (F32 a)         { return std::ceil(a); }
+FW_CUDA_FUNC F64    ceil            (F64 a)         { return std::ceil(a); }
+FW_CUDA_FUNC U64    doubleToBits    (const F64& a)  { return reinterpret_cast<const U64&>(a); }
+FW_CUDA_FUNC F64    bitsToDouble    (const U64& a)  { return reinterpret_cast<const F64&>(a); }
 
 #if FW_CUDA
-FW_CUDA_FUNC F32    pow             (F32 a, F32 b)  { return ::__powf(a, b); }
-FW_CUDA_FUNC F32    exp             (F32 a)         { return ::__expf(a); }
-FW_CUDA_FUNC F32    exp2            (F32 a)         { return ::exp2f(a); }
-FW_CUDA_FUNC F64    exp2            (F64 a)         { return ::exp2(a); }
-FW_CUDA_FUNC F32    log             (F32 a)         { return ::__logf(a); }
-FW_CUDA_FUNC F32    log2            (F32 a)         { return ::__log2f(a); }
-FW_CUDA_FUNC F64    log2            (F64 a)         { return ::log2(a); }
-FW_CUDA_FUNC F32    sin             (F32 a)         { return ::__sinf(a); }
-FW_CUDA_FUNC F32    cos             (F32 a)         { return ::__cosf(a); }
-FW_CUDA_FUNC F32    tan             (F32 a)         { return ::__tanf(a); }
-FW_CUDA_FUNC U32    floatToBits     (F32 a)         { return ::__float_as_int(a); }
-FW_CUDA_FUNC F32    bitsToFloat     (U32 a)         { return ::__int_as_float(a); }
-FW_CUDA_FUNC F32    exp2            (int a)         { return ::exp2f((F32)a); }
-FW_CUDA_FUNC F32    fastMin         (F32 a, F32 b)  { return ::fminf(a, b); }
-FW_CUDA_FUNC F32    fastMax         (F32 a, F32 b)  { return ::fmaxf(a, b); }
-FW_CUDA_FUNC F64    fastMin         (F64 a, F64 b)  { return ::fmin(a, b); }
-FW_CUDA_FUNC F64    fastMax         (F64 a, F64 b)  { return ::fmax(a, b); }
+FW_CUDA_FUNC F32    pow             (F32 a, F32 b)  { return __powf(a, b); }
+FW_CUDA_FUNC F32    exp             (F32 a)         { return __expf(a); }
+FW_CUDA_FUNC F32    exp2            (F32 a)         { return exp2f(a); }
+FW_CUDA_FUNC F64    exp2            (F64 a)         { return exp2(a); }
+FW_CUDA_FUNC F32    log             (F32 a)         { return __logf(a); }
+FW_CUDA_FUNC F32    log2            (F32 a)         { return __log2f(a); }
+FW_CUDA_FUNC F64    log2            (F64 a)         { return log2(a); }
+FW_CUDA_FUNC F32    sin             (F32 a)         { return __sinf(a); }
+FW_CUDA_FUNC F32    cos             (F32 a)         { return __cosf(a); }
+FW_CUDA_FUNC F32    tan             (F32 a)         { return __tanf(a); }
+FW_CUDA_FUNC U32    floatToBits     (F32 a)         { return __float_as_int(a); }
+FW_CUDA_FUNC F32    bitsToFloat     (U32 a)         { return __int_as_float(a); }
+FW_CUDA_FUNC F32    exp2            (int a)         { return exp2f((F32)a); }
+FW_CUDA_FUNC F32    fastMin         (F32 a, F32 b)  { return fminf(a, b); }
+FW_CUDA_FUNC F32    fastMax         (F32 a, F32 b)  { return fmaxf(a, b); }
+FW_CUDA_FUNC F64    fastMin         (F64 a, F64 b)  { return fmin(a, b); }
+FW_CUDA_FUNC F64    fastMax         (F64 a, F64 b)  { return fmax(a, b); }
 #else
-inline F32          pow             (F32 a, F32 b)  { return ::powf(a, b); }
-inline F32          exp             (F32 a)         { return ::expf(a); }
-inline F32          exp2            (F32 a)         { return ::powf(2.0f, a); }
-inline F64          exp2            (F64 a)         { return ::pow(2.0, a); }
-inline F32          log             (F32 a)         { return ::logf(a); }
-inline F32          log2            (F32 a)         { return ::logf(a) / ::logf(2.0f); }
-inline F64          log2            (F64 a)         { return ::log(a) / ::log(2.0); }
-inline F32          sin             (F32 a)         { return ::sinf(a); }
-inline F32          cos             (F32 a)         { return ::cosf(a); }
-inline F32          tan             (F32 a)         { return ::tanf(a); }
-inline U32          floatToBits     (F32 a)         { return *(U32*)&a; }
-inline F32          bitsToFloat     (U32 a)         { return *(F32*)&a; }
+inline F32          pow             (F32 a, F32 b)  { return std::pow(a, b); }
+inline F32          exp             (F32 a)         { return std::exp(a); }
+inline F32          exp2            (F32 a)         { return std::pow(2.0f, a); }
+inline F64          exp2            (F64 a)         { return std::pow(2.0, a); }
+inline F32          log             (F32 a)         { return std::log(a); }
+inline F32          log2            (F32 a)         { return std::log(a) / ::logf(2.0f); }
+inline F64          log2            (F64 a)         { return std::log(a) / ::log(2.0); }
+inline F32          sin             (F32 a)         { return std::sin(a); }
+inline F32          cos             (F32 a)         { return std::cos(a); }
+inline F32          tan             (F32 a)         { return std::tan(a); }
+inline U32          floatToBits     (const F32& a)  { return reinterpret_cast<const U32&>(a); }
+inline F32          bitsToFloat     (const U32& a)  { return reinterpret_cast<const F32&>(a); }
 inline F32          exp2            (int a)         { return bitsToFloat(clamp(a + 127, 1, 254) << 23); }
 inline F32          fastMin         (F32 a, F32 b)  { return (a + b - abs(a - b)) * 0.5f; }
 inline F32          fastMax         (F32 a, F32 b)  { return (a + b + abs(a - b)) * 0.5f; }
@@ -215,16 +215,17 @@ public:
 
 template <class T, int L> class Vector : public VectorBase<T, L, Vector<T, L> >
 {
+    typedef VectorBase<T, L, Vector<T, L> > Base;
 public:
-    FW_CUDA_FUNC                    Vector      (void)                      { setZero(); }
+    FW_CUDA_FUNC                    Vector      (void)                      { Base::setZero(); }
     FW_CUDA_FUNC                    Vector      (T a)                       { set(a); }
 
     FW_CUDA_FUNC    const T*        getPtr      (void) const                { return m_values; }
     FW_CUDA_FUNC    T*              getPtr      (void)                      { return m_values; }
     static FW_CUDA_FUNC Vector      fromPtr     (const T* ptr)              { Vector v; v.set(ptr); return v; }
 
-    template <class V> FW_CUDA_FUNC Vector(const VectorBase<T, L, V>& v) { set(v); }
-    template <class V> FW_CUDA_FUNC Vector& operator=(const VectorBase<T, L, V>& v) { set(v); return *this; }
+    template <class V> FW_CUDA_FUNC Vector(const VectorBase<T, L, V>& v) { Base::set(v); }
+    template <class V> FW_CUDA_FUNC Vector& operator=(const VectorBase<T, L, V>& v) { Base::set(v); return *this; }
 
 private:
     T               m_values[L];
@@ -609,7 +610,7 @@ public:
 template <class T, int L> class Matrix : public MatrixBase<T, L, Matrix<T, L> >
 {
 public:
-    FW_CUDA_FUNC                    Matrix      (void)                      { setIdentity(); }
+    FW_CUDA_FUNC                    Matrix      (void)                      { MatrixBase<T, L, Matrix<T, L> >::setIdentity(); }
     FW_CUDA_FUNC    explicit        Matrix      (T a)                       { set(a); }
 
     FW_CUDA_FUNC    const T*        getPtr      (void) const                { return m_values; }

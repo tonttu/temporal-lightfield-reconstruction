@@ -48,9 +48,9 @@ void InputStream::readFully(void* ptr, int size)
 
 BufferedInputStream::BufferedInputStream(InputStream& stream, int bufferSize)
 :   m_stream        (stream),
+    m_buffer        (NULL, bufferSize),
     m_numRead       (0),
-    m_numConsumed   (0),
-    m_buffer        (NULL, bufferSize)
+    m_numConsumed   (0)
 {
     FW_ASSERT(bufferSize > 0);
 }

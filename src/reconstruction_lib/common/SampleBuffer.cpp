@@ -36,6 +36,16 @@
 #include "3d/ConvexPolyhedron.hpp"
 #include <cstdio>
 
+namespace
+{
+
+struct Entry
+{
+    float x,y,z,w,u,v,t,r,g,b,a,mv_x,mv_y,mv_w,dwdx,dwdy;
+};
+
+}
+
 namespace FW
 {
 
@@ -280,11 +290,6 @@ UVTSampleBuffer::UVTSampleBuffer(const char* filename)
 
 		// Parse samples.
 
-		struct Entry
-		{
-			float x,y,z,w,u,v,t,r,g,b,a,mv_x,mv_y,mv_w,dwdx,dwdy;
-		};
-
 		printf("\n");
 		if(!binary)
 		{
@@ -508,11 +513,6 @@ void UVTSampleBuffer::serialize(const char* filename, bool separateHeader, bool 
 		}
 		else
 		{
-			struct Entry
-			{
-				float x,y,z,w,u,v,t,r,g,b,a,mv_x,mv_y,mv_w,dwdx,dwdy;
-			};
-
 			int num = 0;
 			for(int y=0;y<m_height;y++)
 			for(int x=0;x<m_width; x++)

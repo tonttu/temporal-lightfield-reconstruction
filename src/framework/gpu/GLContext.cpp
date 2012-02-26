@@ -51,7 +51,7 @@ GLContext*              GLContext::s_headless           = NULL;
 GLContext*              GLContext::s_current            = NULL;
 bool                    GLContext::s_stereoAvailable    = false;
 
-GLContext::TempTexture  GLContext::s_tempTextures       = { &s_tempTextures, &s_tempTextures, 0, 0 };
+GLContext::TempTexture  GLContext::s_tempTextures       = { &s_tempTextures, &s_tempTextures, 0, 0, 0 };
 Hash<Vec2i, GLContext::TempTexture*>* GLContext::s_tempTexHash = NULL;
 S32                     GLContext::s_tempTexBytes       = 0;
 Hash<String, GLContext::Program*>* GLContext::s_programs = NULL;

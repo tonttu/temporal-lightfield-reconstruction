@@ -37,7 +37,7 @@ using namespace FW;
 
 static const char* const    s_defaultTitle      = "Anonymous window";
 static const Vec2i          s_defaultSize       = Vec2i(1024, 768);
-static bool                 s_defaultFullScreen = false;
+static const bool           s_defaultFullScreen = false;
 static const char* const    s_windowClassName   = "FrameworkWindowClass";
 
 //------------------------------------------------------------------------

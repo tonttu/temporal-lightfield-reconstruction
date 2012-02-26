@@ -324,6 +324,8 @@ void FW::loadMtl(ImportState& s, BufferedInputStream& mtlIn, const String& dirNa
 #if WAVEFRONT_DEBUG
         if (!valid)
             setError("Invalid line %d in Wavefront MTL: '%s'!", lineNum, line);
+#else
+        (void)valid;
 #endif
     }
 }
@@ -513,6 +515,8 @@ void FW::loadObj(ImportState& s, BufferedInputStream& objIn, const String& dirNa
 #if WAVEFRONT_DEBUG
         if (!valid)
             setError("Invalid line %d in Wavefront OBJ: '%s'!", lineNum, line);
+#else
+        (void)valid;
 #endif
     }
 

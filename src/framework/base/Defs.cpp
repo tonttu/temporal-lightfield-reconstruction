@@ -119,8 +119,6 @@ static void deinitString(void* str)
 
 void* FW::malloc(size_t size)
 {
-    FW_ASSERT(size >= 0);
-
 #if FW_MEM_DEBUG
     s_lock.enter();
 
@@ -190,8 +188,6 @@ void FW::free(void* ptr)
 
 void* FW::realloc(void* ptr, size_t size)
 {
-    FW_ASSERT(size >= 0);
-
     if (!ptr)
         return FW::malloc(size);
 

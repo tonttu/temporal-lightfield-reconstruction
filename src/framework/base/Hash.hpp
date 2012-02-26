@@ -74,7 +74,7 @@ public:
     T&                  remove      (const T& value);
     T                   replace     (const T& value);
 
-    int                 findSlot    (const T& value) const          { return findSlot(value, hash<T>(value) >> 1, false); }
+    int                 findSlot    (const T& value) const;
     int                 firstSlot   (void) const                    { return nextSlot(-1); }
     int                 nextSlot    (int slot) const;
     const T&            getSlot     (int slot) const                { FW_ASSERT(m_hashes[slot] >= 0); return m_values[slot]; }
@@ -402,6 +402,14 @@ template <class T> T Set<T>::replace(const T& value)
     T old = m_values[slot];
     m_values[slot] = value;
     return old;
+}
+
+//------------------------------------------------------------------------
+
+
+template <class T> int Set<T>::findSlot(const T& value) const
+{
+    return findSlot(value, hash<T>(value) >> 1, false);
 }
 
 //------------------------------------------------------------------------

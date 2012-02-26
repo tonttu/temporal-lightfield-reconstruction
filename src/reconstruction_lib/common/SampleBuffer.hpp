@@ -40,7 +40,6 @@ namespace FW
 
 class CameraParams;
 class InterleavedUVTSampleBuffer;
-enum ReconstructionFilter;
 
 class SampleBuffer
 {
@@ -49,7 +48,7 @@ public:
 	struct Sample
 	{
 		Sample()																									{ }
-        Sample(int x,int y,int i, const Vec4f& color,float z,float w=0,Vec3f mv=0,Vec2f wg=0) : x(x), y(y), i(i), color(color), z(z), w(w), mv(mv), wg(wg) {}
+        Sample(int x,int y,int i, const Vec4f& color,float z,float w=0,Vec3f mv=0,Vec2f wg=0) : x(x), y(y), i(i), z(z), w(w), color(color), mv(mv), wg(wg) {}
 
 		S32		x,y,i;	// which sample (x,y, sample number)
 		Vec2f	xy;		// not from renderer

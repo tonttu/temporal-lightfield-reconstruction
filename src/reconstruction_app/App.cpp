@@ -293,8 +293,11 @@ void App::readState(StateDump& d)
     d.pushOwner("App");
     String fileName;
 	d.get(fileName, "m_fileName");
-    d.get((S32&)m_flipY, "m_flipY");
-    d.get((bool&)m_cameraParams.enableCuda, "enableCuda");
+    S32 tmp = 0;
+    d.get(tmp, "m_flipY");
+    m_flipY = tmp;
+    d.get(tmp, "enableCuda");
+    m_cameraParams.enableCuda = tmp;
     d.get((F32&)m_gamma, "m_gamma");
     d.popOwner();
 
@@ -310,8 +313,8 @@ void App::writeState(StateDump& d) const
 
     d.pushOwner("App");
 	d.set(m_fileName, "m_fileName");
-    d.set((S32&)m_flipY, "m_flipY");
-    d.set((bool&)m_cameraParams.enableCuda, "enableCuda");
+    d.set(m_flipY, "m_flipY");
+    d.set(m_cameraParams.enableCuda, "enableCuda");
     d.set((F32&)m_gamma, "m_gamma");
     d.popOwner();
 }
@@ -510,6 +513,9 @@ void App::reconstruct(Visualization viz)
 			filter.reconstructDofMotion(*img);
 			break;
 		}
+    default:
+        fail("App::reconstruct(%d)", viz);
+        break;
 	}
 
 	profilePop();
