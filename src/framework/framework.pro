@@ -1,0 +1,7 @@
+include(../src.pri)
+include(io.pri)
+include(base.pri)
+include(3rdparty.pri)
+include(gpu.pri)
+include(3d.pri)
+include(gui.pri)
