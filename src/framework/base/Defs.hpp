@@ -207,6 +207,7 @@ template <class T> FW_CUDA_FUNC void swap(T& a, T& b) { T t = a; a = b; b = t; }
 FW_SPECIALIZE_MINMAX(template <class T>, T&, (a < b) ? a : b, (a > b) ? a : b)
 FW_SPECIALIZE_MINMAX(template <class T>, const T&, (a < b) ? a : b, (a > b) ? a : b)
 
+/*
 #if FW_CUDA
 FW_SPECIALIZE_MINMAX(, U32, ::min(a, b), ::max(a, b))
 FW_SPECIALIZE_MINMAX(, S32, ::min(a, b), ::max(a, b))
@@ -215,6 +216,7 @@ FW_SPECIALIZE_MINMAX(, S64, ::min(a, b), ::max(a, b))
 FW_SPECIALIZE_MINMAX(, F32, ::fminf(a, b), ::fmaxf(a, b))
 FW_SPECIALIZE_MINMAX(, F64, ::fmin(a, b), ::fmax(a, b))
 #endif
+*/
 
 //------------------------------------------------------------------------
 }

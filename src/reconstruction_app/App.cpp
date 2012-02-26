@@ -39,7 +39,16 @@
 #include "io/AviExporter.hpp"
 
 #include <stdio.h>
+#ifdef _MSC_VER
 #include <conio.h>
+#endif
+
+#ifdef FW_QT
+#include <QFileInfo>
+#include <QDir>
+#include <QDateTime>
+#include <QRegExp>
+#endif
 
 using namespace FW;
 
@@ -235,6 +244,11 @@ bool App::handleEvent(const Window::Event& ev)
 			Image* image = new Image(m_window.getSize(), ImageFormat::RGBA_Vec4f);
 
 			String sweepName = "sweep_";
+#ifdef FW_QT
+			U64 stamp = QDateTime::currentMSecsSinceEpoch();
+			for (int i = 44; i >= 0; i -= 4)
+				sweepName += (char)('a' + ((stamp >> i) & 15));
+#else
 			SYSTEMTIME st;
 			FILETIME ft;
 			GetSystemTime(&st);
@@ -242,6 +256,7 @@ bool App::handleEvent(const Window::Event& ev)
 			U64 stamp = *(const U64*)&ft;
 			for (int i = 60; i >= 0; i -= 4)
 				sweepName += (char)('a' + ((stamp >> i) & 15));
+#endif
 			AviExporter avi(sweepName + ".avi", m_window.getSize(), fps);
 			for (int i=0; i < frames; i++)
 			{
@@ -331,6 +346,16 @@ void App::firstTimeInit(void)
 
 void FW::init(void)
 {
+#ifdef FW_QT
+	QDir dir = QDir::current();
+	for (int i = 0; i < 5; ++i) {
+		if (dir.exists("src")) {
+			QDir::setCurrent(dir.absolutePath());
+			break;
+		}
+		if (!dir.cdUp()) break;
+	}
+#endif
 	new App;
 }
 
@@ -411,22 +436,33 @@ void App::importSampleBuffer (const String& fileName)
 	// TODO fix png
 
 	// try loading ground truth images
+	U32 gammaI = 0, gammaF = 0;
+#ifdef FW_QT
+	QFileInfo fi(fileName.getPtr());
+	QDir dir(fi.path());
+	QString fn = fi.fileName() + ".groundtruth.?.?.png";
+	QStringList lst = dir.entryList(QStringList() << fn, QDir::Files);
+	QRegExp re("\\.groundtruth\\.(\\d+)\\.(\\d+)\\.png$");
+	if (!lst.isEmpty() && re.indexIn(lst[0])) {
+		gammaI = re.cap(1).toInt();
+		gammaF = re.cap(2).toInt();
+#else
 	WIN32_FIND_DATA FF;
 	String gtf = fileName + ".groundtruth.?.?.png";
 	HANDLE hFF = FindFirstFile( gtf.getPtr(), &FF );
-	U32 gammaI = 0, gammaF = 0;
 	if ( hFF != INVALID_HANDLE_VALUE )
 	{
 		String ending = String(FF.cFileName).substring( (int)(strstr( FF.cFileName, "groundtruth" )-FF.cFileName) );
 		int tokens = sscanf_s( ending.getPtr(), "groundtruth.%d.%d.png", &gammaI, &gammaF );
 		if ( tokens != 2 )
 			fail( "Invalid format for ground truth image file (%s)", FF.cFileName );
+		FindClose( hFF );
+#endif
 		m_groundTruthImage = importImage( FW::sprintf( "%s.groundtruth.%d.%d.png", fileName.getPtr(), gammaI, gammaF ) );
 		m_gamma = gammaI + gammaF/10.0f;
 
-		FindClose( hFF );
-		gtf = FW::sprintf( "%s.groundtruth.%d.%d.pinhole.png", fileName.getPtr(), gammaI, gammaF );
-		m_groundTruthPinholeImage = importImage( gtf );
+		String tmp = FW::sprintf( "%s.groundtruth.%d.%d.pinhole.png", fileName.getPtr(), gammaI, gammaF );
+		m_groundTruthPinholeImage = importImage( tmp );
 	}
 	else
 	{
@@ -515,9 +551,9 @@ void App::reconstruct(Visualization viz)
 			filter.reconstructDofMotion(*img);
 			break;
 		}
-    default:
-        fail("App::reconstruct(%d)", viz);
-        break;
+	default:
+		fail("App::reconstruct(%d)", viz);
+		break;
 	}
 
 	profilePop();
