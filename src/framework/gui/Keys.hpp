@@ -28,6 +28,10 @@
 #pragma once
 #include "base/Defs.hpp"
 
+#ifdef FW_QT
+#include <QChar>
+#endif
+
 namespace FW
 {
 //------------------------------------------------------------------------
@@ -249,7 +253,11 @@ namespace FW
 
 String  unicodeToKey    (S32 cp);
 S32     keyToUnicode    (const String& key);
+#ifdef _MSC_VER
 String  vkeyToKey       (U32 vkey);
-
+#endif
+#ifdef FW_QT
+String  qtkeyToKey      (int key, QChar chr);
+#endif
 //------------------------------------------------------------------------
 }
