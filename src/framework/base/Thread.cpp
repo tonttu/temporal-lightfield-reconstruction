@@ -27,13 +27,126 @@
 
 #include "base/Thread.hpp"
 
+#include <cassert>
+
 using namespace FW;
+
+#ifdef FW_QT
+
+namespace
+{
+
+const float s_priorityX = float(QThread::TimeCriticalPriority-QThread::IdlePriority)/
+        float(Thread::Priority_Max-Thread::Priority_Min);
+const float s_priorityY = QThread::IdlePriority-Thread::Priority_Min*s_priorityX;
+
+//------------------------------------------------------------------------
+
+QThread::Priority fwToQt(int priority)
+{
+    return QThread::Priority(
+                qBound<int>(QThread::IdlePriority,
+                       qRound(s_priorityX*priority+s_priorityY),
+                       QThread::TimeCriticalPriority));
+}
+
+//------------------------------------------------------------------------
+
+int qtToFw(QThread::Priority priority)
+{
+    return qBound<int>(Thread::Priority_Min,
+                  qRound((priority-s_priorityY)/s_priorityX),
+                  Thread::Priority_Max);
+}
+
+}
+
+//------------------------------------------------------------------------
+
+class ThreadWrapper : public QThread
+{
+public:
+    ThreadWrapper(Thread::StartParams& params);
+
+protected:
+    virtual void run();
+
+private:
+    Thread::StartParams& m_params;
+};
+
+//------------------------------------------------------------------------
+
+#endif
 
 //------------------------------------------------------------------------
 
 Spinlock            Thread::s_lock;
 Hash<U32, Thread*>  Thread::s_threads;
 Thread*             Thread::s_mainThread    = NULL;
+
+//------------------------------------------------------------------------
+
+#ifdef FW_QT
+
+//------------------------------------------------------------------------
+
+Spinlock::Spinlock(void)
+{
+}
+
+//------------------------------------------------------------------------
+
+Spinlock::~Spinlock(void)
+{
+}
+
+//------------------------------------------------------------------------
+
+void Spinlock::enter(void)
+{
+    m_mutex.lock();
+}
+
+//------------------------------------------------------------------------
+
+void Spinlock::leave(void)
+{
+    m_mutex.unlock();
+}
+
+//------------------------------------------------------------------------
+
+Semaphore::Semaphore(int initCount, int maxCount)
+    : m_semaphore(maxCount)
+{
+    if (initCount < maxCount)
+        m_semaphore.acquire(maxCount - initCount);
+}
+
+//------------------------------------------------------------------------
+
+Semaphore::~Semaphore(void)
+{
+}
+
+//------------------------------------------------------------------------
+
+bool Semaphore::acquire(int millis)
+{
+    return m_semaphore.tryAcquire(1, millis);
+}
+
+//------------------------------------------------------------------------
+
+void Semaphore::release(void)
+{
+    m_semaphore.release();
+}
+
+//------------------------------------------------------------------------
+
+#else
 
 //------------------------------------------------------------------------
 
@@ -96,6 +209,10 @@ void Semaphore::release(void)
     if (!ReleaseSemaphore(m_handle, 1, NULL))
         failWin32Error("ReleaseSemaphore");
 }
+
+//------------------------------------------------------------------------
+
+#endif
 
 //------------------------------------------------------------------------
 
@@ -240,8 +357,13 @@ void Thread::start(ThreadFunc func, void* param)
     params.userParam    = param;
     params.ready.acquire();
 
+#ifdef FW_QT
+    ThreadWrapper* handle = new ThreadWrapper(params);
+    handle->start();
+#else
     if (!CreateThread(NULL, 0, threadProc, &params, 0, NULL))
         failWin32Error("CreateThread");
+#endif
 
     params.ready.acquire();
     m_startLock.leave();
@@ -279,6 +401,91 @@ bool Thread::isMain(void)
     Thread* curr = getCurrent();
     return (curr == s_mainThread);
 }
+
+//------------------------------------------------------------------------
+
+#ifdef FW_QT
+
+//------------------------------------------------------------------------
+
+U32 Thread::getID(void)
+{
+    return QThread::currentThreadId();
+}
+
+//------------------------------------------------------------------------
+
+void Thread::sleep(int millis)
+{
+    usleep(millis * 1000);
+}
+
+//------------------------------------------------------------------------
+
+void Thread::yield(void)
+{
+    QThread::yieldCurrentThread();
+}
+
+//------------------------------------------------------------------------
+
+int Thread::getPriority(void)
+{
+    refer();
+    if (m_handle)
+        m_priority = qtToFw(m_handle->priority());
+    unrefer();
+
+    return m_priority;
+}
+
+//------------------------------------------------------------------------
+
+void Thread::setPriority(int priority)
+{
+    refer();
+    m_priority = priority;
+    if (m_handle)
+        m_handle->setPriority(fwToQt(priority));
+    unrefer();
+}
+
+//------------------------------------------------------------------------
+
+bool Thread::isAlive(void)
+{
+    bool alive = false;
+    refer();
+
+    if (m_handle)
+    {
+        if (m_handle->isFinished())
+            m_exited = true;
+        else
+            alive = true;
+    }
+
+    unrefer();
+    return alive;
+}
+
+//------------------------------------------------------------------------
+
+void Thread::join(void)
+{
+    FW_ASSERT(this != getMain());
+    FW_ASSERT(this != getCurrent());
+
+    refer();
+    if (m_handle)
+        m_handle->wait();
+    m_exited = true;
+    unrefer();
+}
+
+//------------------------------------------------------------------------
+
+#else
 
 //------------------------------------------------------------------------
 
@@ -365,6 +572,10 @@ void Thread::join(void)
 
 //------------------------------------------------------------------------
 
+#endif
+
+//------------------------------------------------------------------------
+
 void* Thread::getUserData(const String& id)
 {
     m_lock.enter();
@@ -422,8 +633,13 @@ void Thread::suspendAll(void)
     {
         Thread* thread = s_threads.getSlot(i).value;
         thread->refer();
-        if (thread->m_handle && thread->m_id != getID())
+        if (thread->m_handle && thread->m_id != getID()) {
+#ifdef FW_QT
+            setError("Thread::suspendAll isn't implemented with FW_QT");
+#else
             SuspendThread(thread->m_handle);
+#endif
+        }
         thread->unrefer();
     }
     s_lock.leave();
@@ -456,9 +672,14 @@ void Thread::unrefer(void)
 void Thread::started(void)
 {
     m_id = getID();
+#ifdef FW_QT
+    m_handle = QThread::currentThread();
+    assert(m_handle);
+#else
     m_handle = OpenThread(THREAD_ALL_ACCESS, FALSE, m_id);
     if (!m_handle)
         failWin32Error("OpenThread");
+#endif
 
     s_lock.enter();
 
@@ -491,11 +712,67 @@ void Thread::exited(void)
 
     s_lock.leave();
 
-    if (m_handle)
+    if (m_handle) {
+#ifdef FW_QT
+        m_handle->deleteLater();
+#else
         CloseHandle(m_handle);
+#endif
+    }
     m_id = 0;
     m_handle = NULL;
 }
+
+//------------------------------------------------------------------------
+
+#ifdef FW_QT
+
+//------------------------------------------------------------------------
+
+ThreadWrapper::ThreadWrapper(Thread::StartParams& params)
+    : m_params(params) {}
+
+//------------------------------------------------------------------------
+
+void ThreadWrapper::run()
+{
+    Thread*         thread      = m_params.thread;
+    Thread::ThreadFunc userFunc    = m_params.userFunc;
+    void*           userParam   = m_params.userParam;
+
+    // Initialize.
+
+    thread->started();
+    thread->setPriority(thread->m_priority);
+    m_params.ready.release();
+
+    // Execute.
+
+    userFunc(userParam);
+
+    // Check whether the thread object still exists,
+    // as userFunc() may have deleted it.
+
+    Thread::s_lock.enter();
+    bool exists = Thread::s_threads.contains(Thread::getID());
+    Thread::s_lock.leave();
+
+    // Still exists => deinit.
+
+    if (exists)
+    {
+        failIfError();
+        thread->getPriority();
+
+        thread->refer();
+        thread->m_exited = true;
+        thread->unrefer();
+    }
+}
+
+//------------------------------------------------------------------------
+
+#else
 
 //------------------------------------------------------------------------
 
@@ -536,5 +813,7 @@ DWORD WINAPI Thread::threadProc(LPVOID lpParameter)
     }
     return 0;
 }
+
+#endif
 
 //------------------------------------------------------------------------

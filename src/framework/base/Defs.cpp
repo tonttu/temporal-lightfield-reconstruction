@@ -37,6 +37,10 @@
 #include <stdarg.h>
 #include <malloc.h>
 
+#ifdef FW_QT
+#include <QMessageBox>
+#endif
+
 using namespace FW;
 
 //------------------------------------------------------------------------
@@ -352,6 +356,7 @@ void FW::fail(const char* fmt, ...)
 
     // Display modal dialog.
 
+#ifdef _MSC_VER
     MessageBox(NULL, tmp.getPtr(), "Fatal error", MB_OK);
 
     // Running under a debugger => break here.
@@ -362,6 +367,12 @@ void FW::fail(const char* fmt, ...)
     // Kill the app.
 
     FatalExit(1);
+#elif defined(FW_QT)
+    QMessageBox::critical(0, "Fatal error", tmp.getPtr());
+    abort();
+#else
+    abort();
+#endif
 }
 
 //------------------------------------------------------------------------

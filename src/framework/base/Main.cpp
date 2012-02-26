@@ -42,6 +42,10 @@
 #include <pthread.h>
 #endif
 
+#ifdef FW_QT
+#include <QApplication>
+#endif
+
 using namespace FW;
 
 //------------------------------------------------------------------------
@@ -56,6 +60,10 @@ static bool s_enableLeakCheck   = true;
 
 int main(int argc, char* argv[])
 {
+#ifdef FW_QT
+    QApplication app(argc, argv);
+#endif
+
     // Store arguments.
 
     FW::argc = argc;
@@ -97,7 +105,9 @@ int main(int argc, char* argv[])
     while (Window::getNumOpen())
     {
         // Wait for a message.
-
+#ifdef FW_QT
+        QCoreApplication::processEvents();
+#else
         MSG msg;
         if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
@@ -123,6 +133,7 @@ int main(int argc, char* argv[])
                 "- Check the \"Thrown\" box for \"Access violation\".\n"
                 "- Re-run the application under debugger (F5).");
         }
+#endif
     }
 
     // Clean up.

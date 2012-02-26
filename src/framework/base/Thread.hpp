@@ -26,8 +26,17 @@
  */
 
 #pragma once
+
 #include "base/Hash.hpp"
 #include "base/DLLImports.hpp"
+
+#ifdef FW_QT
+#include <QThread>
+#include <QMutex>
+#include <QSemaphore>
+
+class ThreadWrapper;
+#endif
 
 namespace FW
 {
@@ -47,7 +56,11 @@ private:
     Spinlock&           operator=       (const Spinlock&); // forbidden
 
 private:
+#ifdef FW_QT
+    QMutex              m_mutex;
+#else
     CRITICAL_SECTION    m_critSect;
+#endif
 };
 
 //------------------------------------------------------------------------
@@ -66,7 +79,11 @@ private:
     Semaphore&          operator=       (const Semaphore&); // forbidden
 
 private:
+#ifdef FW_QT
+    QSemaphore          m_semaphore;
+#else
     HANDLE              m_handle;
+#endif
 };
 
 //------------------------------------------------------------------------
@@ -157,7 +174,9 @@ private:
     void                started         (void);
     void                exited          (void);
 
+#ifndef FW_QT
     static DWORD WINAPI threadProc      (LPVOID lpParameter);
+#endif
 
 private:
                         Thread          (const Thread&); // forbidden
@@ -174,11 +193,15 @@ private:
 
     Spinlock            m_startLock;
     U32                 m_id;
+#ifdef FW_QT
+    friend class ::ThreadWrapper;
+    QThread*            m_handle;
+#else
     HANDLE              m_handle;
+#endif
     S32                 m_priority;
 
     Hash<String, UserData> m_userData;
 };
 
-//------------------------------------------------------------------------
 }

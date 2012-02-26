@@ -193,6 +193,13 @@ void FW::deinitDLLImports(void)
 
 //------------------------------------------------------------------------
 
+void FW::setCudaDLLName(const String&) {}
+void FW::initDLLImports(void) {}
+void FW::initGLImports(void) {}
+void FW::deinitDLLImports(void) {}
+
+//------------------------------------------------------------------------
+
 #define FW_DLL_IMPORT_RETV(RET, CALL, NAME, PARAMS, PASS)   bool isAvailable_ ## NAME(void) { return true; }
 #define FW_DLL_IMPORT_VOID(RET, CALL, NAME, PARAMS, PASS)   bool isAvailable_ ## NAME(void) { return true; }
 #define FW_DLL_DECLARE_RETV(RET, CALL, NAME, PARAMS, PASS)  bool isAvailable_ ## NAME(void) { return true; }
