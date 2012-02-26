@@ -29,6 +29,10 @@
 #include "io/Stream.hpp"
 #include "base/DLLImports.hpp"
 
+#ifdef FW_QT
+#include <QFile>
+#endif
+
 namespace FW
 {
 
@@ -50,7 +54,7 @@ public:
         Create, // created or truncated - can be read or written
         Modify  // opened or created - can be read or written
     };
-
+#ifndef FW_QT
     class AsyncOp
     {
         friend class File;
@@ -91,41 +95,50 @@ public:
         bool                m_done;
         bool                m_failed;
     };
-
+#endif
 public:
                             File                    (const String& name, Mode mode, bool disableCache = false);
     virtual                 ~File                   (void);
 
     const String&           getName                 (void) const    { return m_name; }
+    bool                    checkWritable           (void) const;
+
+#ifdef FW_QT
+    Mode                    getMode                 (void) const;
+    S64                     getSize                 (void) const    { return m_file.size(); }
+    S64                     getOffset               (void) const    { return m_file.pos(); }
+#else
     Mode                    getMode                 (void) const    { return m_mode; }
     int                     getAlign                (void) const    { return m_align; } // 1 unless disableCache = true.
-    bool                    checkWritable           (void) const;
 
     S64                     getSize                 (void) const    { return m_size; }
     S64                     getOffset               (void) const    { return m_offset; }
-    void                    seek                    (S64 ofs);
+
     void                    setSize                 (S64 size);
     void                    allocateSpace           (S64 size);
+
+    AsyncOp*                readAsync               (void* ptr, int size);
+    AsyncOp*                writeAsync              (const void* ptr, int size);
+#endif
+    void                    seek                    (S64 ofs);
 
     virtual int             read                    (void* ptr, int size);
     virtual void            write                   (const void* ptr, int size);
     virtual void            flush                   (void);
 
-    AsyncOp*                readAsync               (void* ptr, int size);
-    AsyncOp*                writeAsync              (const void* ptr, int size);
-
 private:
                             File                    (const File&); // forbidden
     File&                   operator=               (const File&); // forbidden
-
+#ifndef FW_QT
     void                    fixSize                 (void);
     void                    startOp                 (AsyncOp* op);
 
     void*                   allocAligned            (void*& base, int size);
     bool                    readAligned             (S64 ofs, void* ptr, int size);
-
+#endif
 private:
     String                  m_name;
+#ifndef FW_QT
     Mode                    m_mode;
     bool                    m_disableCache;
     HANDLE                  m_handle;
@@ -134,6 +147,9 @@ private:
     S64                     m_size;
     S64                     m_actualSize;
     S64                     m_offset;
+#else
+    QFile                   m_file;
+#endif
 };
 
 //------------------------------------------------------------------------
